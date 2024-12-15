@@ -63,7 +63,7 @@ class _ProfilePageState extends State<ProfilePage> {
             // Created Events Section
             ListTile(
               leading: Icon(Icons.event),
-              title: Text('My Created Events'),
+              title: Text('My Events'),
               subtitle: Text('$_createdEventsCount Events'),
               trailing: Icon(Icons.arrow_forward),
               onTap: () {
