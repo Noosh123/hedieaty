@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty/screens/eventlist_page.dart';
 import 'package:hedieaty/screens/homepage.dart';
 
 void main() {
@@ -11,6 +12,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: HomePage(),
+      routes: {
+        '/homepage': (context) => HomePage(),
+        '/eventlist': (context) => EventListPage(),
+
+      },
     );
   }
 }

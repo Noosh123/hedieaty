@@ -5,7 +5,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.yellow,
+        backgroundColor: Colors.yellow[800],
         title: Text('Hedieaty - Friends'),
         actions: [
           IconButton(
@@ -48,6 +48,7 @@ class HomePage extends StatelessWidget {
                       trailing: Icon(Icons.arrow_forward),
                       onTap: () {
                         // Navigate to Friend's Event List
+                        Navigator.pushNamed(context, '/eventlist');
                       },
                     ),
                   );
