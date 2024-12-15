@@ -6,14 +6,14 @@ class GiftListPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.yellow[800],
-        title: Text('Gift List'),
+        title: const Text('Gift List'),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
               // Handle sorting logic
               print('Sort by: $value');
             },
-            itemBuilder: (context) => [
+            itemBuilder: (context) => const [
               PopupMenuItem(
                 value: 'name',
                 child: Text('Sort by Name'),
@@ -37,10 +37,10 @@ class GiftListPage extends StatelessWidget {
           itemBuilder: (context, index) {
             return Card(
               elevation: 2,
-              margin: EdgeInsets.symmetric(vertical: 8),
+              margin: const EdgeInsets.symmetric(vertical: 8),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundImage: NetworkImage(
+                  backgroundImage: const NetworkImage(
                     'https://via.placeholder.com/150', // Replace with gift image URL
                   ),
                   radius: 30,
@@ -48,36 +48,15 @@ class GiftListPage extends StatelessWidget {
                 title: Text('Gift ${index + 1}'),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: const [
                     Text('Category: Electronics'),
-                    Text('Price: \$${(index + 1) * 10}'),
+                    Text('Price: \$99.99'), // Static placeholder
                   ],
                 ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.circle,
-                      color: index.isEven ? Colors.green : Colors.yellow, // Status indicator
-                      size: 16,
-                    ),
-                    PopupMenuButton<String>(
-                      onSelected: (value) {
-                        // Handle edit/delete
-                        print('$value for Gift ${index + 1}');
-                      },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'edit',
-                          child: Text('Edit'),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Text('Delete'),
-                        ),
-                      ],
-                    ),
-                  ],
+                trailing: Icon(
+                  Icons.circle,
+                  color: index.isEven ? Colors.green : Colors.yellow, // Status indicator
+                  size: 16,
                 ),
                 onTap: () {
                   // Navigate to Gift Details Page
@@ -87,13 +66,6 @@ class GiftListPage extends StatelessWidget {
             );
           },
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigate to Add Gift Page
-          print('Add Gift');
-        },
-        child: Icon(Icons.add),
       ),
     );
   }

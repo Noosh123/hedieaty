@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty/screens/MyEventList_page.dart';
 import 'package:hedieaty/screens/eventlist_page.dart';
 import 'package:hedieaty/screens/giftdetails_page.dart';
 import 'package:hedieaty/screens/giftlist_page.dart';
@@ -19,11 +20,12 @@ class MyApp extends StatelessWidget {
       home: HomePage(),
       routes: {
         '/homepage': (context) => HomePage(),
-        '/eventlist': (context) => EventListPage(),
+        '/eventlist': (context) => EventListPage(friendName: 'Friend Name'),
+        '/myEventlist': (context) => MyEventListPage(),// Pass dynamic name later
         '/giftlist':(context) => GiftListPage(),
         '/giftdetails':(context) => GiftDetailsPage(),
         '/myprofile':(context) => ProfilePage(),
-        '/mppledgedgifts':(context) => PledgedGiftsPage(),
+        '/pledgedgifts':(context) => PledgedGiftsPage(),
 
       },
     );

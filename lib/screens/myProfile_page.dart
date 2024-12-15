@@ -68,7 +68,7 @@ class _ProfilePageState extends State<ProfilePage> {
               trailing: Icon(Icons.arrow_forward),
               onTap: () {
                 // Navigate to Created Events Page
-                Navigator.pushNamed(context, '/created-events');
+                Navigator.pushNamed(context, '/myEventlist');
               },
             ),
             const Divider(),
@@ -80,7 +80,7 @@ class _ProfilePageState extends State<ProfilePage> {
               trailing: Icon(Icons.arrow_forward),
               onTap: () {
                 // Navigate to Pledged Gifts Page
-                Navigator.pushNamed(context, '/mppledgedgifts');
+                Navigator.pushNamed(context, '/pledgedgifts');
               },
             ),
             const Divider(),
