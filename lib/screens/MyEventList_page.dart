@@ -35,35 +35,51 @@ class MyEventListPage extends StatelessWidget {
         child: ListView.builder(
           itemCount: 5, // Replace with dynamic count
           itemBuilder: (context, index) {
+            // Example event status (Upcoming, Current, Past)
+            final status = index % 3 == 0
+                ? 'Upcoming'
+                : (index % 3 == 1 ? 'Current' : 'Past'); // Replace with dynamic data
+
             return Card(
               elevation: 2,
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: ListTile(
                 leading: Icon(
                   Icons.event,
-                  color: index.isEven ? Colors.green : Colors.red, // Status indicator
+                  color: status == 'Upcoming'
+                      ? Colors.green
+                      : (status == 'Current' ? Colors.orange : Colors.red), // Status indicator
                 ),
                 title: Text('Event ${index + 1}'),
-                subtitle: Text('Date: ${DateTime.now().toLocal()}'),
+                subtitle: Text('Status: $status\nDate: ${DateTime.now().toLocal()}'),
                 trailing: PopupMenuButton<String>(
                   onSelected: (value) {
                     // Handle edit/delete
                     print('$value for Event ${index + 1}');
                   },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Text('Edit'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Text('Delete'),
-                    ),
-                  ],
+                  itemBuilder: (context) {
+                    // Conditionally add "Edit" option for upcoming events
+                    List<PopupMenuItem<String>> menuItems = [];
+                    if (status == 'Upcoming') {
+                      menuItems.add(
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Text('Edit'),
+                        ),
+                      );
+                    }
+                    menuItems.add(
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Delete'),
+                      ),
+                    );
+                    return menuItems;
+                  },
                 ),
                 onTap: () {
                   // Navigate to Gift List Page
-                  Navigator.pushNamed(context, '/giftlist');
+                  Navigator.pushNamed(context, '/myGiftlist');
                 },
               ),
             );

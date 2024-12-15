@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class GiftDetailsPage extends StatefulWidget {
+class createGift extends StatefulWidget {
   final bool isEdit; // Flag to differentiate between Add and Edit
-  const GiftDetailsPage({Key? key, this.isEdit = false}) : super(key: key);
+  const createGift({Key? key, this.isEdit = false}) : super(key: key);
 
   @override
-  State<GiftDetailsPage> createState() => _GiftDetailsPageState();
+  State<createGift> createState() => _GiftDetailsPageState();
 }
 
-class _GiftDetailsPageState extends State<GiftDetailsPage> {
+class _GiftDetailsPageState extends State<createGift> {
   final _formKey = GlobalKey<FormState>();
   String? _giftName;
   String? _description;
