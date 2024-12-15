@@ -81,7 +81,7 @@ class GiftListPage extends StatelessWidget {
                 ),
                 onTap: () {
                   // Navigate to Gift Details Page
-                  Navigator.pushNamed(context, '/gift-details');
+                  Navigator.pushNamed(context, '/giftdetails');
                 },
               ),
             );
