@@ -12,6 +12,7 @@ class HomePage extends StatelessWidget {
             icon: Icon(Icons.person),
             onPressed: () {
               // Navigate to Profile Page
+              Navigator.pushNamed(context, '/myprofile');
             },
           ),
         ],

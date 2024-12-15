@@ -3,6 +3,7 @@ import 'package:hedieaty/screens/eventlist_page.dart';
 import 'package:hedieaty/screens/giftdetails_page.dart';
 import 'package:hedieaty/screens/giftlist_page.dart';
 import 'package:hedieaty/screens/homepage.dart';
+import 'package:hedieaty/screens/myProfile_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,6 +20,7 @@ class MyApp extends StatelessWidget {
         '/eventlist': (context) => EventListPage(),
         '/giftlist':(context) => GiftListPage(),
         '/giftdetails':(context) => GiftDetailsPage(),
+        '/myprofile':(context) => ProfilePage(),
 
       },
     );
