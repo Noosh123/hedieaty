@@ -35,6 +35,9 @@ class GiftListPage extends StatelessWidget {
         child: ListView.builder(
           itemCount: 5, // Replace with dynamic count
           itemBuilder: (context, index) {
+            // Example gift status (available or pledged)
+            final isAvailable = index % 2 == 0; // Replace with dynamic logic later
+
             return Card(
               elevation: 2,
               margin: const EdgeInsets.symmetric(vertical: 8),
@@ -48,20 +51,28 @@ class GiftListPage extends StatelessWidget {
                 title: Text('Gift ${index + 1}'),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text('Category: Electronics'),
-                    Text('Price: \$99.99'), // Static placeholder
+                  children: [
+                    const Text('Category: Electronics'),
+                    const Text('Price: \$99.99'), // Static placeholder
+                    Text(
+                      isAvailable ? 'Available' : 'Pledged',
+                      style: TextStyle(
+                        color: isAvailable ? Colors.green : Colors.red,
+                      ),
+                    ),
                   ],
                 ),
                 trailing: Icon(
                   Icons.circle,
-                  color: index.isEven ? Colors.green : Colors.yellow, // Status indicator
+                  color: isAvailable ? Colors.green : Colors.yellow, // Status indicator
                   size: 16,
                 ),
-                onTap: () {
+                onTap: isAvailable
+                    ? () {
                   // Navigate to Gift Details Page
                   Navigator.pushNamed(context, '/giftdetails');
-                },
+                }
+                    : null, // Disable tap if not available
               ),
             );
           },

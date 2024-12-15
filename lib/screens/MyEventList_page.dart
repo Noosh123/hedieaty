@@ -75,7 +75,7 @@ class MyEventListPage extends StatelessWidget {
         heroTag: 'createEvent',
         onPressed: () {
           // Navigate to Create Event Page
-          print('Create Event');
+          Navigator.pushNamed(context, '/createEvent');
         },
         child: const Icon(Icons.add_card_sharp, color: Colors.white),
       ),

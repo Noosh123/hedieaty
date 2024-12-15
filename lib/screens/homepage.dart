@@ -11,7 +11,7 @@ class HomePage extends StatelessWidget {
         title: Text('Hedieaty'),
         actions: [
           IconButton(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person_pin ,size: 40,),
             onPressed: () {
               // Navigate to Profile Page
               Navigator.pushNamed(context, '/myprofile');
@@ -84,7 +84,7 @@ class HomePage extends StatelessWidget {
                     heroTag: 'createEvent',
                     onPressed: () {
                       // Navigate to Create Event Page
-                      print('Create Event');
+                      Navigator.pushNamed(context, '/createEvent');
                     },
                     child: Icon(Icons.add_card_sharp,color: Colors.white,),
                   ),

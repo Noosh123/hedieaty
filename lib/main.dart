@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty/screens/MyEventList_page.dart';
+import 'package:hedieaty/screens/createEvent_page.dart';
 import 'package:hedieaty/screens/eventlist_page.dart';
 import 'package:hedieaty/screens/giftdetails_page.dart';
 import 'package:hedieaty/screens/giftlist_page.dart';
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         '/giftdetails':(context) => GiftDetailsPage(),
         '/myprofile':(context) => ProfilePage(),
         '/pledgedgifts':(context) => PledgedGiftsPage(),
+        '/createEvent': (context) => CreateEventPage(),
 
       },
     );
