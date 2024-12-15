@@ -5,8 +5,10 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+
+        centerTitle: true,
         backgroundColor: Colors.yellow[800],
-        title: Text('Hedieaty - Friends'),
+        title: Text('Hedieaty'),
         actions: [
           IconButton(
             icon: Icon(Icons.person),
@@ -56,15 +58,66 @@ class HomePage extends StatelessWidget {
                 },
               ),
             ),
+            Container(
+              decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(10)
+              ),
+
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  // FAB for adding a new friend
+                  FloatingActionButton(
+                    backgroundColor: Colors.yellow[800],
+                    heroTag: 'addFriend',
+                    onPressed: () {
+                      // Navigate to Add Friend Page
+                      print('Add Friend');
+                    },
+                    child: Icon(Icons.person_add),
+                  ),
+                  const SizedBox(height: 16),
+                  // FAB for creating a new event
+                  FloatingActionButton(
+                    backgroundColor: Colors.green,
+                    heroTag: 'createEvent',
+                    onPressed: () {
+                      // Navigate to Create Event Page
+                      print('Create Event');
+                    },
+                    child: Icon(Icons.add_card_sharp,color: Colors.white,),
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigate to Create Event/List Page
-        },
-        child: Icon(Icons.add),
-      ),
+      // floatingActionButton: Row(
+      //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+      //   children: [
+      //     // FAB for adding a new friend
+      //     FloatingActionButton(
+      //       heroTag: 'addFriend',
+      //       onPressed: () {
+      //         // Navigate to Add Friend Page
+      //         print('Add Friend');
+      //       },
+      //       child: Icon(Icons.person_add),
+      //     ),
+      //     const SizedBox(height: 16),
+      //     // FAB for creating a new event
+      //     FloatingActionButton(
+      //       heroTag: 'createEvent',
+      //       onPressed: () {
+      //         // Navigate to Create Event Page
+      //         print('Create Event');
+      //       },
+      //       child: Icon(Icons.add_card_sharp),
+      //     ),
+      //   ],
+      // ),
     );
   }
 }

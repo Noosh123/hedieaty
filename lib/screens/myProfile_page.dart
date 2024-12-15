@@ -80,7 +80,7 @@ class _ProfilePageState extends State<ProfilePage> {
               trailing: Icon(Icons.arrow_forward),
               onTap: () {
                 // Navigate to Pledged Gifts Page
-                Navigator.pushNamed(context, '/pledged-gifts');
+                Navigator.pushNamed(context, '/mppledgedgifts');
               },
             ),
             const Divider(),
