@@ -1,10 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty/services/authWrapper.dart';
+import 'package:hedieaty/services/auth_service.dart';
 
 class HomePage extends StatelessWidget {
+  final AuthService _authService = AuthService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+            onPressed: ()async{
+              await _authService.signOut();
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => AuthWrapper()),
+                    (route) => false,
+              );
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Logged out successfully')),
+              );},
+            icon: Icon(Icons.logout,size: 40,)),
         centerTitle: true,
         backgroundColor: Colors.yellow[800],
         title: const Text('Hedieaty'),
