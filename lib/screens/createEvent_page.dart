@@ -5,6 +5,10 @@ import 'package:hedieaty/services/auth_service.dart';
 import 'package:hedieaty/services/event_service.dart';
 
 class CreateEventPage extends StatefulWidget {
+  final EventModel? event; // Optional parameter for editing
+
+  CreateEventPage({this.event}); // Constructor to accept event for editing
+
   @override
   _CreateEventPageState createState() => _CreateEventPageState();
 }
@@ -32,6 +36,20 @@ class _CreateEventPageState extends State<CreateEventPage> {
   final TextEditingController _dateController = TextEditingController();
   bool _isLoading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // If editing, populate fields with existing data
+    if (widget.event != null) {
+      _eventName = widget.event!.name;
+      _category = widget.event!.category;
+      _eventDate = widget.event!.date;
+      _location = widget.event!.location;
+      _description = widget.event!.description;
+      _dateController.text = DateFormat('yyyy-MM-dd').format(widget.event!.date);
+    }
+  }
+
   void _saveEvent() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -41,29 +59,41 @@ class _CreateEventPageState extends State<CreateEventPage> {
       try {
         final String userId = _authService.currentUser!.uid;
 
-        // Prepare the event model
-        final EventModel newEvent = EventModel(
-          id: '', // Firestore will generate this, so keep it empty for now
-          userId: userId,
-          name: _eventName!,
-          category: _category!,
-          date: _eventDate!,
-          location: _location ?? '',
-          description: _description ?? '',
-        );
-
-        // Save to Firestore
-        await _eventService.addEvent(newEvent);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Event created successfully!')),
-        );
+        if (widget.event == null) {
+          // Add new event
+          final EventModel newEvent = EventModel(
+            id: '',
+            userId: userId,
+            name: _eventName!,
+            category: _category!,
+            date: _eventDate!,
+            location: _location ?? '',
+            description: _description ?? '',
+          );
+          await _eventService.addEvent(newEvent);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Event created successfully!')),
+          );
+        } else {
+          // Update existing event
+          final Map<String, dynamic> updatedData = {
+            'name': _eventName,
+            'category': _category,
+            'date': _eventDate,
+            'location': _location,
+            'description': _description,
+          };
+          await _eventService.updateEvent(widget.event!.id!, updatedData);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Event updated successfully!')),
+          );
+        }
 
         Navigator.pop(context); // Return to the previous screen
       } catch (e) {
         print('Error saving event: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create event: $e')),
+          SnackBar(content: Text('Failed to save event: $e')),
         );
       } finally {
         setState(() => _isLoading = false);
@@ -82,7 +112,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.yellow[800],
-        title: const Text('Create Event'),
+        title: Text(widget.event == null ? 'Create Event' : 'Edit Event'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -92,6 +122,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
             children: [
               // Event Name
               TextFormField(
+                initialValue: _eventName,
                 decoration: const InputDecoration(
                   labelText: 'Event Name',
                   border: OutlineInputBorder(),
@@ -104,6 +135,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
               // Category Dropdown
               DropdownButtonFormField<String>(
+                value: _category,
                 decoration: const InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(),
@@ -125,8 +157,8 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 onTap: () async {
                   final selectedDate = await showDatePicker(
                     context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2000),
+                    initialDate: _eventDate ?? DateTime.now(),
+                    firstDate: DateTime.now(), // Prevent past dates
                     lastDate: DateTime(2100),
                   );
                   if (selectedDate != null) {
@@ -153,6 +185,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
               // Location
               TextFormField(
+                initialValue: _location,
                 decoration: const InputDecoration(
                   labelText: 'Location',
                   border: OutlineInputBorder(),
@@ -163,6 +196,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
               // Description
               TextFormField(
+                initialValue: _description,
                 decoration: const InputDecoration(
                   labelText: 'Description',
                   border: OutlineInputBorder(),

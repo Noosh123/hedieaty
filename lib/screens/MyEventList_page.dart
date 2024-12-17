@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty/models/event_model.dart';
+import 'package:hedieaty/screens/createEvent_page.dart';
 import 'package:hedieaty/services/auth_service.dart';
 import 'package:hedieaty/services/event_service.dart';
 
@@ -127,10 +128,11 @@ class _MyEventListPageState extends State<MyEventListPage> {
               trailing: PopupMenuButton<String>(
                 onSelected: (value) async {
                   if (value == 'edit') {
-                    Navigator.pushNamed(
+                    Navigator.push(
                       context,
-                      '/createEvent',
-                      arguments: {'event': event},
+                      MaterialPageRoute(
+                        builder: (context) => CreateEventPage(event: event),
+                      ),
                     );
                   } else if (value == 'delete') {
                     await _deleteEvent(event.id!);
