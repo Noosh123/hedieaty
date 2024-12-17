@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty/services/auth_service.dart';
+import 'package:hedieaty/services/user_service.dart';
+import 'package:hedieaty/models/user_model.dart';
 
 class SignUpScreen extends StatefulWidget {
   @override
@@ -14,6 +16,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _confirmPasswordController = TextEditingController();
   final _phoneController = TextEditingController();
   final AuthService _authService = AuthService();
+  final UserService _userService = UserService();
+
   bool _isLoading = false;
 
   void _signUp() async {
@@ -26,17 +30,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
       setState(() => _isLoading = true);
       try {
-        await _authService.signUp(
+        // Create user in Firebase Authentication
+        final userCredential = await _authService.signUp(
           _emailController.text.trim(),
           _passwordController.text.trim(),
         );
+
+        // Prepare user data for Firestore
+        final user = UserModel(
+          id: userCredential!.uid, // Firebase User UID
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          phoneNumber: _phoneController.text.trim(),
+          profileImage: '', // Default empty, user can add later
+        );
+
+        // Add user to Firestore
+        await _userService.addUser(user);
+
+        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Account created successfully! Click Sign in to proceed')),
+            content: Text('Account created successfully! Please sign in.'),
+          ),
         );
+
+        // Navigate to Sign-In Page
+        Navigator.pop(context);
       } catch (e) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
       } finally {
         setState(() => _isLoading = false);
       }
@@ -73,12 +97,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       borderRadius: BorderRadius.circular(12.0),
                     ),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your name';
-                    }
-                    return null;
-                  },
+                  validator: (value) =>
+                  value == null || value.isEmpty ? 'Please enter your name' : null,
                 ),
                 const SizedBox(height: 16),
                 // Email Input
@@ -98,7 +118,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}$').hasMatch(value)) {
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}$')
+                        .hasMatch(value)) {
                       return 'Please enter a valid email';
                     }
                     return null;
@@ -118,15 +139,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
                   obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
+                  validator: (value) =>
+                  value == null || value.length < 6
+                      ? 'Password must be at least 6 characters'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 // Confirm Password Input
@@ -142,12 +158,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
                   obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please confirm your password';
-                    }
-                    return null;
-                  },
+                  validator: (value) =>
+                  value == null || value.isEmpty ? 'Please confirm your password' : null,
                 ),
                 const SizedBox(height: 16),
                 // Phone Number Input
@@ -176,7 +188,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 24),
                 // Sign Up Button
                 _isLoading
-                    ? CircularProgressIndicator()
+                    ? const CircularProgressIndicator()
                     : ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     shape: const StadiumBorder(),
@@ -202,7 +214,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         "Sign in",
                         style: TextStyle(color: Colors.purple),
                       ),
-                    )
+                    ),
                   ],
                 )
               ],
