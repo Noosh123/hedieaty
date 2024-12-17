@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:intl/intl.dart';
+import 'package:hedieaty/models/event_model.dart';
+import 'package:hedieaty/services/auth_service.dart';
+import 'package:hedieaty/services/event_service.dart';
 
 class CreateEventPage extends StatefulWidget {
   @override
@@ -8,6 +11,9 @@ class CreateEventPage extends StatefulWidget {
 
 class _CreateEventPageState extends State<CreateEventPage> {
   final _formKey = GlobalKey<FormState>();
+  final EventService _eventService = EventService();
+  final AuthService _authService = AuthService();
+
   String? _eventName;
   String? _category;
   DateTime? _eventDate;
@@ -24,6 +30,52 @@ class _CreateEventPageState extends State<CreateEventPage> {
   ];
 
   final TextEditingController _dateController = TextEditingController();
+  bool _isLoading = false;
+
+  void _saveEvent() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
+      setState(() => _isLoading = true);
+
+      try {
+        final String userId = _authService.currentUser!.uid;
+
+        // Prepare the event model
+        final EventModel newEvent = EventModel(
+          id: '', // Firestore will generate this, so keep it empty for now
+          userId: userId,
+          name: _eventName!,
+          category: _category!,
+          date: _eventDate!,
+          location: _location ?? '',
+          description: _description ?? '',
+        );
+
+        // Save to Firestore
+        await _eventService.addEvent(newEvent);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Event created successfully!')),
+        );
+
+        Navigator.pop(context); // Return to the previous screen
+      } catch (e) {
+        print('Error saving event: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create event: $e')),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _dateController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,15 +96,12 @@ class _CreateEventPageState extends State<CreateEventPage> {
                   labelText: 'Event Name',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Event name is required';
-                  }
-                  return null;
-                },
+                validator: (value) =>
+                value == null || value.isEmpty ? 'Event name is required' : null,
                 onSaved: (value) => _eventName = value,
               ),
               const SizedBox(height: 16),
+
               // Category Dropdown
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(
@@ -66,14 +115,11 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 ))
                     .toList(),
                 onChanged: (value) => _category = value,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Category is required';
-                  }
-                  return null;
-                },
+                validator: (value) =>
+                value == null || value.isEmpty ? 'Category is required' : null,
               ),
               const SizedBox(height: 16),
+
               // Event Date Picker
               GestureDetector(
                 onTap: () async {
@@ -98,16 +144,13 @@ class _CreateEventPageState extends State<CreateEventPage> {
                       labelText: 'Event Date',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) {
-                      if (_eventDate == null) {
-                        return 'Event date is required';
-                      }
-                      return null;
-                    },
+                    validator: (value) =>
+                    _eventDate == null ? 'Event date is required' : null,
                   ),
                 ),
               ),
               const SizedBox(height: 16),
+
               // Location
               TextFormField(
                 decoration: const InputDecoration(
@@ -117,6 +160,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 onSaved: (value) => _location = value,
               ),
               const SizedBox(height: 16),
+
               // Description
               TextFormField(
                 decoration: const InputDecoration(
@@ -127,24 +171,20 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 onSaved: (value) => _description = value,
               ),
               const SizedBox(height: 32),
+
               // Save Button
-              ElevatedButton(
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    // Save the event details (placeholder for now)
-                    print('Event Name: $_eventName');
-                    print('Category: $_category');
-                    print('Event Date: $_eventDate');
-                    print('Location: $_location');
-                    print('Description: $_description');
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text('Save Event'),
+                onPressed: _saveEvent,
+                child: const Text(
+                  'Save Event',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
               ),
             ],
           ),

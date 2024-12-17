@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty/services/friend_service.dart';
+import 'package:hedieaty/services/auth_service.dart';
 
 class AddFriendScreen extends StatefulWidget {
   @override
@@ -7,30 +9,50 @@ class AddFriendScreen extends StatefulWidget {
 
 class _AddFriendScreenState extends State<AddFriendScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final FriendService _friendService = FriendService();
+  final AuthService _authService = AuthService();
+
+  bool _isLoading = false;
 
   @override
   void dispose() {
-    _nameController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
 
-  void _submitForm() {
+  Future<void> _addFriend() async {
     if (_formKey.currentState!.validate()) {
-      // Simulate saving the friend's details
-      print('Name: ${_nameController.text}');
-      print('Phone Number: ${_phoneController.text}');
+      setState(() => _isLoading = true);
 
-      // Clear form fields after submission
-      _nameController.clear();
-      _phoneController.clear();
+      try {
+        // Step 1: Get current user's ID
+        final String currentUserId = _authService.currentUser!.uid;
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Friend added successfully!')),
-      );
+        // Step 2: Add friend using FriendService
+        bool success = await _friendService.addFriend(
+          currentUserId: currentUserId,
+          friendPhoneNumber: _phoneController.text.trim(),
+        );
+
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Friend added successfully!')),
+          );
+          _phoneController.clear();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Friend not found or already exists!')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -48,30 +70,6 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Name Input Field
-              const Text(
-                'Friend Name',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  hintText: 'Enter friend\'s name',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  prefixIcon: const Icon(Icons.person),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              // Phone Number Input Field
               const Text(
                 'Phone Number',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -98,10 +96,11 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
                 },
               ),
               const SizedBox(height: 24),
-              // Add Friend Button
               Center(
-                child: ElevatedButton(
-                  onPressed: _submitForm,
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton(
+                  onPressed: _addFriend,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     padding: const EdgeInsets.symmetric(

@@ -4,24 +4,51 @@ import '../models/friend_model.dart';
 class FriendService {
   final CollectionReference _friendsCollection =
   FirebaseFirestore.instance.collection('friends');
+  final CollectionReference _usersCollection =
+  FirebaseFirestore.instance.collection('users');
 
   // Add a friend relationship to Firestore
-  Future<void> addFriend(String userId, String friendId) async {
+  Future<bool> addFriend({
+    required String currentUserId,
+    required String friendPhoneNumber,
+  }) async {
     try {
-      // Check if the friend relationship already exists
-      final query = await _friendsCollection
-          .where('userId', isEqualTo: userId)
-          .where('friendId', isEqualTo: friendId)
+      // Check if the user with the given phone number exists
+      final query = await _usersCollection
+          .where('phoneNumber', isEqualTo: friendPhoneNumber)
           .get();
 
-      if (query.docs.isEmpty) {
-        await _friendsCollection.add({
-          'userId': userId,
-          'friendId': friendId,
-        });
-        print("Friend added successfully!");
+      if (query.docs.isNotEmpty) {
+        final friendDoc = query.docs.first;
+
+        // Friend's data
+        final String friendId = friendDoc.id;
+        final String friendName = friendDoc['name'];
+
+        // Check if this friend relationship already exists
+        final checkQuery = await _friendsCollection
+            .where('userId', isEqualTo: currentUserId)
+            .where('friendId', isEqualTo: friendId)
+            .get();
+
+        if (checkQuery.docs.isEmpty) {
+          // Add the relationship
+          final FriendModel newFriend = FriendModel(
+            userId: currentUserId,
+            friendId: friendId,
+            friendName: friendName,
+            friendPhoneNumber: friendPhoneNumber,
+          );
+
+          await _friendsCollection.add(newFriend.toFirestore());
+          return true; // Successfully added
+        } else {
+          print("Friend already exists.");
+          return false; // Friend already exists
+        }
       } else {
-        print("Friend relationship already exists.");
+        print("User not found.");
+        return false; // User doesn't exist
       }
     } catch (e) {
       print("Error adding friend: $e");
@@ -29,50 +56,13 @@ class FriendService {
     }
   }
 
-  // Fetch the list of friends for a user
-  Stream<List<String>> getFriends(String userId) {
-    try {
-      return _friendsCollection
-          .where('userId', isEqualTo: userId)
-          .snapshots()
-          .map((snapshot) =>
-          snapshot.docs.map((doc) => doc['friendId'] as String).toList());
-    } catch (e) {
-      print("Error fetching friends: $e");
-      rethrow;
-    }
-  }
-
-  // Check if a user exists in the 'users' collection
-  Future<bool> checkUserExists(String phoneNumber) async {
-    try {
-      final query = await FirebaseFirestore.instance
-          .collection('users')
-          .where('phoneNumber', isEqualTo: phoneNumber)
-          .get();
-
-      return query.docs.isNotEmpty;
-    } catch (e) {
-      print("Error checking user existence: $e");
-      rethrow;
-    }
-  }
-
-  // Remove a friend relationship
-  Future<void> removeFriend(String userId, String friendId) async {
-    try {
-      final query = await _friendsCollection
-          .where('userId', isEqualTo: userId)
-          .where('friendId', isEqualTo: friendId)
-          .get();
-
-      for (var doc in query.docs) {
-        await doc.reference.delete();
-      }
-      print("Friend removed successfully!");
-    } catch (e) {
-      print("Error removing friend: $e");
-      rethrow;
-    }
+  // Fetch friends of a user
+  Stream<List<FriendModel>> getFriends(String currentUserId) {
+    return _friendsCollection
+        .where('userId', isEqualTo: currentUserId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+        .map((doc) => FriendModel.fromFirestore(doc.data() as Map<String, dynamic>))
+        .toList());
   }
 }

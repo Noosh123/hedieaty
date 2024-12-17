@@ -1,25 +1,94 @@
 import 'package:flutter/material.dart';
-import 'package:hedieaty/services/authWrapper.dart';
+import 'package:hedieaty/models/friend_model.dart';
 import 'package:hedieaty/services/auth_service.dart';
+import 'package:hedieaty/services/event_service.dart';
+import 'package:hedieaty/services/friend_service.dart';
+import 'package:hedieaty/services/authWrapper.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   final AuthService _authService = AuthService();
+  final FriendService _friendService = FriendService();
+  final EventService _eventService = EventService();
+
+  List<FriendModel> _friends = [];
+  Map<String, int> _upcomingEventsCount = {};
+  List<FriendModel> _filteredFriends = [];
+
+  bool _isLoading = true;
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFriendsAndEvents();
+  }
+
+  // Fetch friends and their upcoming events count using EventService
+  void _loadFriendsAndEvents() async {
+    try {
+      String currentUserId = _authService.currentUser!.uid;
+
+      // Listen to the friends list using FriendService
+      _friendService.getFriends(currentUserId).listen((friendsList) {
+        setState(() {
+          _friends = friendsList;
+          _filteredFriends = friendsList;
+        });
+
+        // Fetch upcoming event counts using EventService
+        for (var friend in friendsList) {
+          _eventService.getUserEvents(friend.friendId).listen((events) {
+            // Filter only upcoming events
+            final upcomingEvents = events
+                .where((event) => event.date.isAfter(DateTime.now()))
+                .toList();
+
+            setState(() {
+              _upcomingEventsCount[friend.friendId] = upcomingEvents.length;
+            });
+          });
+        }
+      });
+    } catch (e) {
+      print('Error fetching friends and events: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _filterFriends(String query) {
+    setState(() {
+      _searchQuery = query;
+      _filteredFriends = _friends
+          .where((friend) =>
+          friend.friendName.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-            onPressed: ()async{
-              await _authService.signOut();
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => AuthWrapper()),
-                    (route) => false,
-              );
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Logged out successfully')),
-              );},
-            icon: Icon(Icons.logout,size: 40,)),
+          onPressed: () async {
+            await _authService.signOut();
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => AuthWrapper()),
+                  (route) => false,
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Logged out successfully')),
+            );
+          },
+          icon: const Icon(Icons.logout, size: 40),
+        ),
         centerTitle: true,
         backgroundColor: Colors.yellow[800],
         title: const Text('Hedieaty'),
@@ -27,16 +96,18 @@ class HomePage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.person_pin, size: 40),
             onPressed: () {
-              // Navigate to Profile Page
               Navigator.pushNamed(context, '/myprofile');
             },
           ),
         ],
       ),
-      body: Padding(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
+            // Search Field
             TextField(
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
@@ -45,26 +116,29 @@ class HomePage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12.0),
                 ),
               ),
-              onChanged: (value) {
-                // Perform search
-              },
+              onChanged: _filterFriends,
             ),
+            const SizedBox(height: 8),
+            // Friends List
             Expanded(
-              child: ListView.builder(
-                itemCount: 10, // Replace with dynamic count
+              child: _filteredFriends.isEmpty
+                  ? const Center(child: Text('No friends found'))
+                  : ListView.builder(
+                itemCount: _filteredFriends.length,
                 itemBuilder: (context, index) {
-                  // Simulate upcoming events count
-                  final int upcomingEvents = index % 3; // Example logic
+                  final friend = _filteredFriends[index];
+                  final upcomingEvents =
+                      _upcomingEventsCount[friend.friendId] ?? 0;
 
                   return Card(
                     child: ListTile(
                       leading: const CircleAvatar(
-                        backgroundImage: NetworkImage(
-                          'https://via.placeholder.com/150', // Replace with friend's image URL
-                        ),
+                        backgroundImage: AssetImage(
+                            'assets/default.png'), // Placeholder image
                       ),
-                      title: Text('Friend $index'),
-                      subtitle: Text('Upcoming Events: $upcomingEvents'),
+                      title: Text(friend.friendName),
+                      subtitle:
+                      Text('Upcoming Events: $upcomingEvents'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -79,14 +153,18 @@ class HomePage extends StatelessWidget {
                         ],
                       ),
                       onTap: () {
-                        // Navigate to Friend's Event List
-                        Navigator.pushNamed(context, '/eventlist');
+                        Navigator.pushNamed(
+                          context,
+                          '/eventlist',
+                          arguments: {'friendId': friend.friendId},
+                        );
                       },
                     ),
                   );
                 },
               ),
             ),
+            // Add Friend and Create Event Buttons
             Container(
               decoration: BoxDecoration(
                 color: Colors.grey[200],
@@ -95,23 +173,19 @@ class HomePage extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  // FAB for adding a new friend
                   FloatingActionButton(
                     backgroundColor: Colors.yellow[800],
                     heroTag: 'addFriend',
                     onPressed: () {
-                      // Navigate to Add Friend Page
                       Navigator.pushNamed(context, '/addFriend');
                     },
                     child: const Icon(Icons.person_add),
                   ),
                   const SizedBox(height: 16),
-                  // FAB for creating a new event
                   FloatingActionButton(
                     backgroundColor: Colors.green,
                     heroTag: 'createEvent',
                     onPressed: () {
-                      // Navigate to Create Event Page
                       Navigator.pushNamed(context, '/createEvent');
                     },
                     child: const Icon(
