@@ -1,6 +1,70 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty/models/event_model.dart';
+import 'package:hedieaty/services/auth_service.dart';
+import 'package:hedieaty/services/event_service.dart';
 
-class MyEventListPage extends StatelessWidget {
+class MyEventListPage extends StatefulWidget {
+  @override
+  _MyEventListPageState createState() => _MyEventListPageState();
+}
+
+class _MyEventListPageState extends State<MyEventListPage> {
+  final EventService _eventService = EventService();
+  final AuthService _authService = AuthService();
+
+  List<EventModel> _events = [];
+  String _sortOption = 'name'; // Default sorting option
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserEvents();
+  }
+
+  void _loadUserEvents() {
+    final String currentUserId = _authService.currentUser!.uid;
+
+    // Fetch user's events
+    _eventService.getUserEvents(currentUserId).listen((eventList) {
+      setState(() {
+        _events = eventList;
+        _isLoading = false;
+      });
+      _sortEvents();
+    });
+  }
+
+  void _sortEvents() {
+    setState(() {
+      if (_sortOption == 'name') {
+        _events.sort((a, b) => a.name.compareTo(b.name));
+      } else if (_sortOption == 'category') {
+        _events.sort((a, b) => a.category.compareTo(b.category));
+      } else if (_sortOption == 'status') {
+        _events.sort((a, b) => _getEventStatus(a).compareTo(_getEventStatus(b)));
+      }
+    });
+  }
+
+  String _getEventStatus(EventModel event) {
+    final now = DateTime.now();
+    if (event.date.isAfter(now)) {
+      return 'Upcoming';
+    } else if (event.date.isBefore(now)) {
+      return 'Past';
+    } else {
+      return 'Current';
+    }
+  }
+
+  Future<void> _deleteEvent(String eventId) async {
+    await _eventService.deleteEvent(eventId);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Event deleted successfully!')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -10,8 +74,10 @@ class MyEventListPage extends StatelessWidget {
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
-              // Handle sorting/filtering logic
-              print('Selected: $value');
+              setState(() {
+                _sortOption = value;
+              });
+              _sortEvents();
             },
             itemBuilder: (context) => [
               const PopupMenuItem(
@@ -30,67 +96,80 @@ class MyEventListPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ListView.builder(
-          itemCount: 5, // Replace with dynamic count
-          itemBuilder: (context, index) {
-            // Example event status (Upcoming, Current, Past)
-            final status = index % 3 == 0
-                ? 'Upcoming'
-                : (index % 3 == 1 ? 'Current' : 'Past'); // Replace with dynamic data
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _events.isEmpty
+          ? const Center(child: Text('No events found'))
+          : ListView.builder(
+        itemCount: _events.length,
+        itemBuilder: (context, index) {
+          final event = _events[index];
+          final status = _getEventStatus(event);
 
-            return Card(
-              elevation: 2,
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              child: ListTile(
-                leading: Icon(
-                  Icons.event,
-                  color: status == 'Upcoming'
-                      ? Colors.green
-                      : (status == 'Current' ? Colors.orange : Colors.red), // Status indicator
-                ),
-                title: Text('Event ${index + 1}'),
-                subtitle: Text('Status: $status\nDate: ${DateTime.now().toLocal()}'),
-                trailing: PopupMenuButton<String>(
-                  onSelected: (value) {
-                    // Handle edit/delete
-                    print('$value for Event ${index + 1}');
-                  },
-                  itemBuilder: (context) {
-                    // Conditionally add "Edit" option for upcoming events
-                    List<PopupMenuItem<String>> menuItems = [];
-                    if (status == 'Upcoming') {
-                      menuItems.add(
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Text('Edit'),
-                        ),
-                      );
-                    }
+          return Card(
+            elevation: 2,
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            child: ListTile(
+              leading: Icon(
+                Icons.event,
+                color: status == 'Upcoming'
+                    ? Colors.green
+                    : (status == 'Current'
+                    ? Colors.orange
+                    : Colors.red),
+              ),
+              title: Text(event.name),
+              subtitle: Text(
+                'Category: ${event.category}\n'
+                    'Status: $status\n'
+                    'Date: ${event.date.toLocal()}',
+              ),
+              trailing: PopupMenuButton<String>(
+                onSelected: (value) async {
+                  if (value == 'edit') {
+                    Navigator.pushNamed(
+                      context,
+                      '/createEvent',
+                      arguments: {'event': event},
+                    );
+                  } else if (value == 'delete') {
+                    await _deleteEvent(event.id!);
+                  }
+                },
+                itemBuilder: (context) {
+                  List<PopupMenuItem<String>> menuItems = [];
+                  if (status == 'Upcoming') {
                     menuItems.add(
                       const PopupMenuItem(
-                        value: 'delete',
-                        child: Text('Delete'),
+                        value: 'edit',
+                        child: Text('Edit'),
                       ),
                     );
-                    return menuItems;
-                  },
-                ),
-                onTap: () {
-                  // Navigate to Gift List Page
-                  Navigator.pushNamed(context, '/myGiftlist');
+                  }
+                  menuItems.add(
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Text('Delete'),
+                    ),
+                  );
+                  return menuItems;
                 },
               ),
-            );
-          },
-        ),
+              onTap: () {
+                Navigator.pushNamed(
+                  context,
+                  '/myGiftlist',
+                  arguments: {'eventId': event.id},
+                );
+              },
+            ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.green,
         heroTag: 'createEvent',
         onPressed: () {
-          // Navigate to Create Event Page
           Navigator.pushNamed(context, '/createEvent');
         },
         child: const Icon(Icons.add_card_sharp, color: Colors.white),
