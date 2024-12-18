@@ -41,6 +41,21 @@ class GiftService {
       rethrow;
     }
   }
+  // Fetch all pledged gifts by a specific user
+  Stream<List<GiftModel>> getPledgedGiftsByUser(String userId) {
+    try {
+      return _giftsCollection
+          .where('pledgedBy', isEqualTo: userId)
+          .snapshots()
+          .map((snapshot) => snapshot.docs
+          .map((doc) => GiftModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+          .toList());
+    } catch (e) {
+      print("Error fetching pledged gifts: $e");
+      rethrow;
+    }
+  }
+
 
   // Pledge a gift
   Future<void> pledgeGift(String giftId, String userId) async {

@@ -67,4 +67,19 @@ class EventService {
       rethrow;
     }
   }
+  // Fetch event details by eventId
+  Future<EventModel?> getEventById(String eventId) async {
+    try {
+      final doc = await _eventsCollection.doc(eventId).get();
+      if (doc.exists) {
+        return EventModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      }
+      return null;
+    } catch (e) {
+      print("Error fetching event by ID: $e");
+      rethrow;
+    }
+  }
+
 }
+

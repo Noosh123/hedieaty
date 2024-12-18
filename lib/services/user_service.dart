@@ -17,11 +17,15 @@ class UserService {
   }
 
   // Fetch user data by ID
+  // Fetch user data by ID
   Future<UserModel?> getUser(String userId) async {
     try {
       final doc = await _usersCollection.doc(userId).get();
       if (doc.exists) {
-        return UserModel.fromFirestore(doc.data() as Map<String, dynamic>);
+        return UserModel.fromFirestore({
+          ...doc.data() as Map<String, dynamic>,
+          'id': doc.id, // Add the document ID explicitly
+        });
       }
       return null; // User not found
     } catch (e) {
@@ -29,6 +33,7 @@ class UserService {
       rethrow;
     }
   }
+
 
   // Update user profile details
   Future<void> updateUserProfile(String userId, Map<String, dynamic> data) async {
