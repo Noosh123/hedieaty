@@ -1,28 +1,120 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty/models/gift_model.dart';
+import 'package:hedieaty/services/auth_service.dart';
+import 'package:hedieaty/services/gift_service.dart';
 
-class createGift extends StatefulWidget {
+class CreateGift extends StatefulWidget {
+  final GiftModel? gift; // Pass the gift model if editing
+  final String eventId; // Event ID for the gift
   final bool isEdit; // Flag to differentiate between Add and Edit
-  const createGift({Key? key, this.isEdit = false}) : super(key: key);
+
+  const CreateGift({
+    Key? key,
+    required this.eventId,
+    this.gift,
+    this.isEdit = false,
+  }) : super(key: key);
 
   @override
-  State<createGift> createState() => _GiftDetailsPageState();
+  State<CreateGift> createState() => _CreateGiftState();
 }
 
-class _GiftDetailsPageState extends State<createGift> {
+class _CreateGiftState extends State<CreateGift> {
   final _formKey = GlobalKey<FormState>();
+  final GiftService _giftService = GiftService();
+  final AuthService _authService = AuthService();
+
   String? _giftName;
   String? _description;
   String? _category;
   double? _price;
-  bool _isPledged = false;
+  String? _imageUrl;
+  String _status = "available";
 
   final List<String> _categories = [
     'Electronics',
     'Books',
     'Clothing',
     'Toys',
-    'Other'
+    'Other',
   ];
+
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Pre-fill form fields if editing
+    if (widget.isEdit && widget.gift != null) {
+      final gift = widget.gift!;
+      if (gift.status == "pledged") {
+        // Show error and block editing
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cannot edit a pledged gift.')),
+          );
+          Navigator.pop(context);
+        });
+      } else {
+        _giftName = gift.name;
+        _description = gift.description;
+        _category = gift.category;
+        _price = gift.price;
+        _imageUrl = gift.image;
+        _status = gift.status;
+      }
+    }
+  }
+
+  void _saveGift() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
+      setState(() => _isLoading = true);
+
+      try {
+        final String userId = _authService.currentUser!.uid;
+
+        // Prepare the gift model
+        final GiftModel newGift = GiftModel(
+          id: widget.isEdit ? widget.gift!.id : '', // Use existing ID if editing
+          eventId: widget.eventId,
+          userId: userId,
+          name: _giftName!,
+          description: _description ?? '',
+          category: _category!,
+          price: _price!,
+          image: _imageUrl ?? '',
+          status: _status,
+          pledgedBy: null, // Initially null for a new gift
+        );
+
+        if (widget.isEdit) {
+          // Update gift
+          await _giftService.updateGift(newGift.id, newGift.toFirestore());
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Gift updated successfully!')),
+          );
+        } else {
+          // Add new gift
+          await _giftService.addGift(newGift);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Gift added successfully!')),
+          );
+        }
+
+        Navigator.pop(context);
+      } catch (e) {
+        print('Error saving gift: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save gift: $e')),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +123,9 @@ class _GiftDetailsPageState extends State<createGift> {
         backgroundColor: Colors.yellow[800],
         title: Text(widget.isEdit ? 'Edit Gift' : 'Add Gift'),
       ),
-      body: Padding(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -39,7 +133,8 @@ class _GiftDetailsPageState extends State<createGift> {
             children: [
               // Gift Name
               TextFormField(
-                decoration: InputDecoration(
+                initialValue: _giftName,
+                decoration: const InputDecoration(
                   labelText: 'Gift Name',
                   border: OutlineInputBorder(),
                 ),
@@ -48,33 +143,42 @@ class _GiftDetailsPageState extends State<createGift> {
                 value == null || value.isEmpty ? 'Name is required' : null,
               ),
               const SizedBox(height: 16),
+
               // Description
               TextFormField(
-                decoration: InputDecoration(
+                initialValue: _description,
+                decoration: const InputDecoration(
                   labelText: 'Description',
                   border: OutlineInputBorder(),
                 ),
                 onSaved: (value) => _description = value,
               ),
               const SizedBox(height: 16),
+
               // Category Dropdown
               DropdownButtonFormField<String>(
-                decoration: InputDecoration(
+                value: _category,
+                decoration: const InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(),
                 ),
                 items: _categories
-                    .map((category) =>
-                    DropdownMenuItem(value: category, child: Text(category)))
+                    .map((category) => DropdownMenuItem(
+                  value: category,
+                  child: Text(category),
+                ))
                     .toList(),
                 onChanged: (value) => _category = value,
-                validator: (value) =>
-                value == null || value.isEmpty ? 'Category is required' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Category is required'
+                    : null,
               ),
               const SizedBox(height: 16),
+
               // Price
               TextFormField(
-                decoration: InputDecoration(
+                initialValue: _price?.toString(),
+                decoration: const InputDecoration(
                   labelText: 'Price',
                   border: OutlineInputBorder(),
                 ),
@@ -91,6 +195,7 @@ class _GiftDetailsPageState extends State<createGift> {
                 },
               ),
               const SizedBox(height: 16),
+
               // Image Upload Placeholder
               GestureDetector(
                 onTap: () {
@@ -101,44 +206,21 @@ class _GiftDetailsPageState extends State<createGift> {
                   height: 150,
                   width: double.infinity,
                   color: Colors.grey[200],
-                  child: Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
+                  child: const Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
                 ),
               ),
-              const SizedBox(height: 16),
-              // Status Toggle
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Pledged Status:'),
-                  Switch(
-                    value: _isPledged,
-                    onChanged: (value) {
-                      setState(() {
-                        _isPledged = value;
-                      });
-                    },
-                  ),
-                ],
-              ),
               const SizedBox(height: 32),
+
               // Save Button
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.yellow[800]
+                  backgroundColor: Colors.yellow[800],
                 ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    // Save the gift details
-                    print('Gift Name: $_giftName');
-                    print('Description: $_description');
-                    print('Category: $_category');
-                    print('Price: $_price');
-                    print('Status: ${_isPledged ? 'Pledged' : 'Available'}');
-                    Navigator.pop(context);
-                  }
-                },
-                child: Text('Save Gift',style: TextStyle(color: Colors.green[800]),),
+                onPressed: _saveGift,
+                child: Text(
+                  widget.isEdit ? 'Update Gift' : 'Add Gift',
+                  style: TextStyle(color: Colors.green[800]),
+                ),
               ),
             ],
           ),

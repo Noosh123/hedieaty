@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty/models/gift_model.dart';
+import 'package:hedieaty/screens/addGift.dart';
 import 'package:hedieaty/services/gift_service.dart';
 
 class MyGiftListPage extends StatefulWidget {
@@ -118,11 +119,17 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
               trailing: PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'edit') {
-                    Navigator.pushNamed(
+                    Navigator.push(
                       context,
-                      '/addGift',
-                      arguments: {'gift': gift},
+                      MaterialPageRoute(
+                        builder: (context) => CreateGift(
+                          eventId: widget.eventId,
+                          gift: gift, // Pass the gift if editing
+                          isEdit: true, // Set to true for editing
+                        ),
+                      ),
                     );
+
                   } else if (value == 'delete') {
                     showDialog(
                       context: context,
@@ -174,19 +181,24 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
           ),
           onPressed: widget.isUpcoming
               ? () {
-            Navigator.pushNamed(
+            Navigator.push(
               context,
-              '/addGift',
-              arguments: {'eventId': widget.eventId},
+              MaterialPageRoute(
+                builder: (context) => CreateGift(
+                  eventId: widget.eventId,
+                  isEdit: false, // It's a new gift, so not editing
+                ),
+              ),
             );
           }
-              : null,
+              : null, // Disable button if event is not upcoming
           child: const Text(
             'Add New Gift',
             style: TextStyle(color: Colors.white, fontSize: 16),
           ),
         ),
       ),
+
     );
   }
 }

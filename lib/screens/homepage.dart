@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty/models/friend_model.dart';
+import 'package:hedieaty/screens/eventlist_page.dart';
 import 'package:hedieaty/services/auth_service.dart';
 import 'package:hedieaty/services/event_service.dart';
 import 'package:hedieaty/services/friend_service.dart';
@@ -153,10 +154,14 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                       onTap: () {
-                        Navigator.pushNamed(
+                        Navigator.push(
                           context,
-                          '/eventlist',
-                          arguments: {'friendId': friend.friendId},
+                          MaterialPageRoute(
+                            builder: (context) => EventListPage(
+                              friendName: friend.friendName,
+                              friendId: friend.friendId,
+                            ),
+                          ),
                         );
                       },
                     ),

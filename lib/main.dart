@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
       home: AuthWrapper(),
       routes: {
         '/homepage': (context) => HomePage(),
-        '/eventlist': (context) => EventListPage(friendName: 'Friend Name'),
+        //'/eventlist': (context) => EventListPage(friendName: 'Friend Name'),
         '/myEventlist': (context) => MyEventListPage(),// Pass dynamic name later
         '/giftlist':(context) => GiftListPage(),
         //'/myGiftlist': (context) => MyGiftListPage(),
@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
         '/myprofile':(context) => ProfilePage(),
         '/pledgedgifts':(context) => PledgedGiftsPage(),
         '/createEvent': (context) => CreateEventPage(),
-        '/addGift': (context) => createGift(),
+        //'/addGift': (context) => createGift(),
         '/addFriend': (context) => AddFriendScreen(),
 
 
