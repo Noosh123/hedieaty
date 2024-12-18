@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty/models/event_model.dart';
 import 'package:hedieaty/screens/createEvent_page.dart';
+import 'package:hedieaty/screens/myGiftlist_page.dart';
 import 'package:hedieaty/services/auth_service.dart';
 import 'package:hedieaty/services/event_service.dart';
 
@@ -158,10 +159,14 @@ class _MyEventListPageState extends State<MyEventListPage> {
                 },
               ),
               onTap: () {
-                Navigator.pushNamed(
+                Navigator.push(
                   context,
-                  '/myGiftlist',
-                  arguments: {'eventId': event.id},
+                  MaterialPageRoute(
+                    builder: (context) => MyGiftListPage(
+                      eventId: event.id,
+                      isUpcoming: _getEventStatus(event) == 'Upcoming',
+                    ),
+                  ),
                 );
               },
             ),

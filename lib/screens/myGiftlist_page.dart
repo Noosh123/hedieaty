@@ -1,6 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty/models/gift_model.dart';
+import 'package:hedieaty/services/gift_service.dart';
 
-class MyGiftListPage extends StatelessWidget {
+class MyGiftListPage extends StatefulWidget {
+  final String eventId;
+  final bool isUpcoming;
+
+  MyGiftListPage({required this.eventId, required this.isUpcoming});
+
+  @override
+  _MyGiftListPageState createState() => _MyGiftListPageState();
+}
+
+class _MyGiftListPageState extends State<MyGiftListPage> {
+  final GiftService _giftService = GiftService();
+  List<GiftModel> _gifts = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGifts();
+  }
+
+  void _loadGifts() {
+    _giftService.getGiftsForEvent(widget.eventId).listen((giftList) {
+      setState(() {
+        _gifts = giftList;
+        _isLoading = false;
+      });
+    });
+  }
+
+  Future<void> _deleteGift(String giftId) async {
+    await _giftService.deleteGift(giftId);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Gift deleted successfully!')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -11,7 +49,19 @@ class MyGiftListPage extends StatelessWidget {
           PopupMenuButton<String>(
             onSelected: (value) {
               // Handle sorting logic
-              print('Sort by: $value');
+              if (value == 'name') {
+                setState(() {
+                  _gifts.sort((a, b) => a.name.compareTo(b.name));
+                });
+              } else if (value == 'category') {
+                setState(() {
+                  _gifts.sort((a, b) => a.category.compareTo(b.category));
+                });
+              } else if (value == 'status') {
+                setState(() {
+                  _gifts.sort((a, b) => a.status.compareTo(b.status));
+                });
+              }
             },
             itemBuilder: (context) => const [
               PopupMenuItem(
@@ -30,115 +80,107 @@ class MyGiftListPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ListView.builder(
-          itemCount: 5, // Replace with dynamic count
-          itemBuilder: (context, index) {
-            final isAvailable = index % 2 == 0; // Replace with dynamic status
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _gifts.isEmpty
+          ? const Center(child: Text('No gifts found for this event'))
+          : ListView.builder(
+        itemCount: _gifts.length,
+        itemBuilder: (context, index) {
+          final gift = _gifts[index];
+          final isAvailable = gift.status == 'available';
 
-            return Card(
-              elevation: 2,
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: const NetworkImage(
-                    'https://via.placeholder.com/150', // Replace with gift image URL
-                  ),
-                  radius: 30,
-                ),
-                title: Text('Gift ${index + 1}'),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Category: Electronics'),
-                    const Text('Price: \$99.99'), // Static placeholder
-                    Text(
-                      isAvailable ? 'Available' : 'Pledged',
-                      style: TextStyle(
-                        color: isAvailable ? Colors.green : Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.circle,
-                      color: isAvailable ? Colors.green : Colors.yellow, // Status indicator
-                      size: 16,
-                    ),
-                    if (isAvailable)
-                      PopupMenuButton<String>(
-                        onSelected: (value) {
-                          if (value == 'edit') {
-                            // Navigate to Edit Gift Page
-                            Navigator.pushNamed(context, '/addGift'); // Replace with actual edit logic
-                          } else if (value == 'delete') {
-                            // Show confirmation dialog before deleting
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: const Text('Confirm Delete'),
-                                  content: const Text('Are you sure you want to delete this gift?'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pop(); // Close dialog
-                                      },
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        // Perform delete operation
-                                        print('Gift ${index + 1} deleted');
-                                        Navigator.of(context).pop(); // Close dialog
-                                      },
-                                      child: const Text('Delete'),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          const PopupMenuItem(
-                            value: 'edit',
-                            child: Text('Edit'),
-                          ),
-                          const PopupMenuItem(
-                            value: 'delete',
-                            child: Text('Delete'),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-                // onTap: isAvailable
-                //     ? () {
-                //   // Navigate to Gift Details Page
-                //   //Navigator.pushNamed(context, '/giftdetails');
-                // }
-                //     : null, // Disable tap if not available
+          return Card(
+            elevation: 2,
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundImage: gift.image.isNotEmpty
+                    ? NetworkImage(gift.image)
+                    : const AssetImage('assets/default.png')
+                as ImageProvider,
+                radius: 30,
               ),
-            );
-          },
-        ),
+              title: Text(gift.name),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Category: ${gift.category}'),
+                  Text('Price: \$${gift.price.toStringAsFixed(2)}'),
+                  Text(
+                    isAvailable ? 'Available' : 'Pledged',
+                    style: TextStyle(
+                      color: isAvailable ? Colors.green : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+              trailing: PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    Navigator.pushNamed(
+                      context,
+                      '/addGift',
+                      arguments: {'gift': gift},
+                    );
+                  } else if (value == 'delete') {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Confirm Delete'),
+                          content: const Text(
+                              'Are you sure you want to delete this gift?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                _deleteGift(gift.id);
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('Delete'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Text('Edit'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Text('Delete'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
-      // Add Gift Button at the bottom
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
+            backgroundColor: widget.isUpcoming ? Colors.green : Colors.grey,
           ),
-          onPressed: () {
-            // Navigate to Add Gift Page
-            Navigator.pushNamed(context, '/addGift');
-          },
+          onPressed: widget.isUpcoming
+              ? () {
+            Navigator.pushNamed(
+              context,
+              '/addGift',
+              arguments: {'eventId': widget.eventId},
+            );
+          }
+              : null,
           child: const Text(
             'Add New Gift',
             style: TextStyle(color: Colors.white, fontSize: 16),
