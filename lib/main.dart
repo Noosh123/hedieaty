@@ -30,9 +30,9 @@ class MyApp extends StatelessWidget {
         '/homepage': (context) => HomePage(),
         //'/eventlist': (context) => EventListPage(friendName: 'Friend Name'),
         '/myEventlist': (context) => MyEventListPage(),// Pass dynamic name later
-        '/giftlist':(context) => GiftListPage(),
+        //'/giftlist':(context) => GiftListPage(),
         //'/myGiftlist': (context) => MyGiftListPage(),
-        '/giftdetails':(context) => GiftDetailsPage(),
+        //'/giftdetails':(context) => GiftDetailsPage(),
         '/myprofile':(context) => ProfilePage(),
         '/pledgedgifts':(context) => PledgedGiftsPage(),
         '/createEvent': (context) => CreateEventPage(),

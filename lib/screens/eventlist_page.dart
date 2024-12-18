@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty/models/event_model.dart';
+import 'package:hedieaty/screens/giftlist_page.dart';
 import 'package:hedieaty/services/event_service.dart';
 
 class EventListPage extends StatefulWidget {
@@ -80,10 +81,18 @@ class _EventListPageState extends State<EventListPage> {
                 ),
                 onTap: () {
                   // Navigate to Gift List Page
-                  Navigator.pushNamed(
+                  Navigator.push(
                     context,
-                    '/giftlist',
-                    arguments: {'eventId': event.id, 'isUpcoming': true},
+                    MaterialPageRoute(
+                      builder: (context) => GiftListPage(
+                        eventId: event.id,
+                        eventName: event.name,
+                        eventDescription: event.description,
+                        eventLocation: event.location,
+                        eventDate: event.date,
+                        isUpcoming: event.date.isAfter(DateTime.now()),
+                      ),
+                    ),
                   );
                 },
               ),

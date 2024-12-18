@@ -111,6 +111,8 @@ class _HomePageState extends State<HomePage> {
             // Search Field
             TextField(
               decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.purple.withOpacity(0.1),
                 prefixIcon: const Icon(Icons.search),
                 hintText: 'Search friends...',
                 border: OutlineInputBorder(
@@ -172,7 +174,7 @@ class _HomePageState extends State<HomePage> {
             // Add Friend and Create Event Buttons
             Container(
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                //color: Colors.purple.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
