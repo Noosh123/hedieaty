@@ -98,10 +98,20 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
               leading: CircleAvatar(
                 backgroundImage: gift.image.isNotEmpty
                     ? NetworkImage(gift.image)
-                    : const AssetImage('assets/default.png')
-                as ImageProvider,
+                    : null, // No background image if gift image is empty
                 radius: 30,
+                child: gift.image.isEmpty
+                    ? const Icon(
+                  Icons.card_giftcard,
+                  size: 30,
+                  color: Colors.white, // Icon color for better visibility
+                )
+                    : null, // No icon if gift image is available
+                backgroundColor: gift.image.isEmpty
+                    ? Colors.orange // Background color for the placeholder icon
+                    : null,
               ),
+
               title: Text(gift.name),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:hedieaty/models/gift_model.dart';
 import 'package:hedieaty/services/auth_service.dart';
 import 'package:hedieaty/services/gift_service.dart';
+import 'package:hedieaty/services/image_service.dart';
+import 'dart:io';
 
 class CreateGift extends StatefulWidget {
   final GiftModel? gift; // Pass the gift model if editing
@@ -23,6 +26,7 @@ class _CreateGiftState extends State<CreateGift> {
   final _formKey = GlobalKey<FormState>();
   final GiftService _giftService = GiftService();
   final AuthService _authService = AuthService();
+  final ImageService _imageService = ImageService();
 
   String? _giftName;
   String? _description;
@@ -64,6 +68,40 @@ class _CreateGiftState extends State<CreateGift> {
         _imageUrl = gift.image;
         _status = gift.status;
       }
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+
+      // Pick image from gallery or camera
+      final XFile? pickedImage = await picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedImage != null) {
+        setState(() => _isLoading = true);
+
+        // Upload image using image_service
+        final imageUrl = await _imageService.uploadImage(pickedImage.path);
+
+        if (imageUrl != null) {
+          setState(() {
+            _imageUrl = imageUrl; // Update the uploaded image URL
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Image uploaded successfully!')),
+          );
+        } else {
+          throw Exception('Image upload failed');
+        }
+      }
+    } catch (e) {
+      print('Error uploading image: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to upload image: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -169,9 +207,8 @@ class _CreateGiftState extends State<CreateGift> {
                 ))
                     .toList(),
                 onChanged: (value) => _category = value,
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Category is required'
-                    : null,
+                validator: (value) =>
+                value == null || value.isEmpty ? 'Category is required' : null,
               ),
               const SizedBox(height: 16),
 
@@ -196,19 +233,32 @@ class _CreateGiftState extends State<CreateGift> {
               ),
               const SizedBox(height: 16),
 
-              // Image Upload Placeholder
+              // Image Upload Section
               GestureDetector(
-                onTap: () {
-                  // Implement image picker functionality
-                  print('Upload image');
-                },
+                onTap: _pickAndUploadImage,
                 child: Container(
                   height: 150,
                   width: double.infinity,
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    border: Border.all(color: Colors.grey),
+                    image: (_imageUrl != null && _imageUrl!.isNotEmpty)
+                        ? DecorationImage(
+                      image: NetworkImage(_imageUrl!),
+                      fit: BoxFit.cover,
+                    )
+                        : null,
+                  ),
+                  child: (_imageUrl == null || _imageUrl!.isEmpty)
+                      ? const Icon(
+                    Icons.add_a_photo,
+                    size: 50,
+                    color: Colors.grey,
+                  )
+                      : null,
                 ),
               ),
+
               const SizedBox(height: 32),
 
               // Save Button
