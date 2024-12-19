@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:hedieaty/models/friend_model.dart';
 import 'package:hedieaty/models/notification_model.dart';
@@ -28,6 +30,7 @@ class _HomePageState extends State<HomePage> {
   Map<String, String> _profileImages = {};
   List<FriendModel> _filteredFriends = [];
   List<NotificationModel> _notifications = [];
+  List<StreamSubscription> _subscriptions = [];
 
   bool _isLoading = true;
   String _searchQuery = '';
@@ -43,16 +46,17 @@ class _HomePageState extends State<HomePage> {
     try {
       String currentUserId = _authService.currentUser!.uid;
 
-      _friendService.getFriends(currentUserId).listen((friendsList) {
+      final friendsSubscription = _friendService.getFriends(currentUserId).listen((friendsList) {
+        if (!mounted) return; // Prevent setState if the widget is disposed
         setState(() {
           _friends = friendsList;
           _filteredFriends = friendsList;
         });
 
-        // Fetch upcoming event counts and profile images
         for (var friend in friendsList) {
           // Fetch profile images
           _userService.getUser(friend.friendId).then((user) {
+            if (!mounted) return;
             if (user != null) {
               setState(() {
                 _profileImages[friend.friendId] = user.profileImage;
@@ -61,22 +65,38 @@ class _HomePageState extends State<HomePage> {
           });
 
           // Fetch upcoming events count
-          _eventService.getUserEvents(friend.friendId).listen((events) {
-            final upcomingEvents = events
-                .where((event) => event.date.isAfter(DateTime.now()))
-                .toList();
+          final eventsSubscription = _eventService.getUserEvents(friend.friendId).listen((events) {
+            final upcomingEvents = events.where((event) => event.date.isAfter(DateTime.now())).toList();
 
+            if (!mounted) return;
             setState(() {
               _upcomingEventsCount[friend.friendId] = upcomingEvents.length;
             });
           });
+
+          // Store the event subscription for cancellation
+          _subscriptions.add(eventsSubscription);
         }
       });
+
+      // Store the friends subscription for cancellation
+      _subscriptions.add(friendsSubscription);
     } catch (e) {
       print('Error fetching friends and events: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
+  }
+  @override
+  void dispose() {
+    // Cancel all active subscriptions
+    for (var subscription in _subscriptions) {
+      subscription.cancel();
+    }
+    _subscriptions.clear();
+    super.dispose();
   }
 
 
@@ -252,7 +272,7 @@ class _HomePageState extends State<HomePage> {
                       leading: CircleAvatar(
                         backgroundImage: profileImage.isNotEmpty
                             ? NetworkImage(profileImage)
-                            : const AssetImage('assets/default.png') as ImageProvider,
+                            : NetworkImage('https://i.ibb.co/GFK3bM1/istockphoto-1332100919-612x612.jpg'),
                       ),
                       title: Text(friend.friendName),
                       subtitle: Text('Upcoming Events: $upcomingEvents'),

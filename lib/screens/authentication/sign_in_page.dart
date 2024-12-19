@@ -17,7 +17,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   void _signIn() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+      if (mounted) setState(() => _isLoading = true);
       try {
         await _authService.signIn(
           _emailController.text.trim(),
@@ -26,13 +26,16 @@ class _SignInScreenState extends State<SignInScreen> {
         // Navigate to the homepage or main app screen
         Navigator.pushReplacementNamed(context, '/homepage');
       } catch (e) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.toString())));
+        if (mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(e.toString())));
+        }
       } finally {
-        setState(() => _isLoading = false);
+        if (mounted) setState(() => _isLoading = false);
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
