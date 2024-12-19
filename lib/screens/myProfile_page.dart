@@ -261,6 +261,17 @@ class _ProfilePageState extends State<ProfilePage> {
               },
             ),
             const Divider(),
+            // Created Private Events Section
+            ListTile(
+              leading: const Icon(Icons.event),
+              title: const Text('My Private Events'),
+              subtitle: Text('$_createdEventsCount Events'),
+              trailing: const Icon(Icons.arrow_forward),
+              onTap: () {
+                Navigator.pushNamed(context, '/myPrivateEventlist');
+              },
+            ),
+            const Divider(),
             // Pledged Gifts Section
             ListTile(
               leading: const Icon(Icons.card_giftcard),

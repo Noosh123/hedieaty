@@ -8,6 +8,7 @@ import 'package:hedieaty/screens/eventlist_page.dart';
 import 'package:hedieaty/screens/giftdetails_page.dart';
 import 'package:hedieaty/screens/giftlist_page.dart';
 import 'package:hedieaty/screens/homepage.dart';
+import 'package:hedieaty/screens/local/PrivateEventListPage.dart';
 import 'package:hedieaty/screens/myGiftlist_page.dart';
 import 'package:hedieaty/screens/myPledgedGifts_page.dart';
 import 'package:hedieaty/screens/myProfile_page.dart';
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
         '/homepage': (context) => HomePage(),
         //'/eventlist': (context) => EventListPage(friendName: 'Friend Name'),
         '/myEventlist': (context) => MyEventListPage(),// Pass dynamic name later
+        '/myPrivateEventlist': (context) => PrivateEventListPage(),// Pass dynamic name later
         //'/giftlist':(context) => GiftListPage(),
         //'/myGiftlist': (context) => MyGiftListPage(),
         //'/giftdetails':(context) => GiftDetailsPage(),

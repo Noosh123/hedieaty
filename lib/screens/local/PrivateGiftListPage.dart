@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty/models/gift_model.dart';
-import 'package:hedieaty/screens/addGift.dart';
+import 'package:hedieaty/screens/local/create_private_gift_page.dart';
 import 'package:hedieaty/services/local/local_gift_service.dart';
 
 class PrivateGiftListPage extends StatefulWidget {
@@ -59,34 +59,18 @@ class _PrivateGiftListPageState extends State<PrivateGiftListPage> {
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
-              // Handle sorting logic
               if (value == 'name') {
-                setState(() {
-                  _gifts.sort((a, b) => a.name.compareTo(b.name));
-                });
+                setState(() => _gifts.sort((a, b) => a.name.compareTo(b.name)));
               } else if (value == 'category') {
-                setState(() {
-                  _gifts.sort((a, b) => a.category.compareTo(b.category));
-                });
+                setState(() => _gifts.sort((a, b) => a.category.compareTo(b.category)));
               } else if (value == 'status') {
-                setState(() {
-                  _gifts.sort((a, b) => a.status.compareTo(b.status));
-                });
+                setState(() => _gifts.sort((a, b) => a.status.compareTo(b.status)));
               }
             },
             itemBuilder: (context) => const [
-              PopupMenuItem(
-                value: 'name',
-                child: Text('Sort by Name'),
-              ),
-              PopupMenuItem(
-                value: 'category',
-                child: Text('Sort by Category'),
-              ),
-              PopupMenuItem(
-                value: 'status',
-                child: Text('Sort by Status'),
-              ),
+              PopupMenuItem(value: 'name', child: Text('Sort by Name')),
+              PopupMenuItem(value: 'category', child: Text('Sort by Category')),
+              PopupMenuItem(value: 'status', child: Text('Sort by Status')),
             ],
           ),
         ],
@@ -111,15 +95,9 @@ class _PrivateGiftListPageState extends State<PrivateGiftListPage> {
                     : null,
                 radius: 30,
                 child: gift.image.isEmpty
-                    ? const Icon(
-                  Icons.card_giftcard,
-                  size: 30,
-                  color: Colors.white,
-                )
+                    ? const Icon(Icons.card_giftcard, size: 30, color: Colors.white)
                     : null,
-                backgroundColor: gift.image.isEmpty
-                    ? Colors.orange
-                    : null,
+                backgroundColor: gift.image.isEmpty ? Colors.orange : null,
               ),
               title: Text(gift.name),
               subtitle: Column(
@@ -141,7 +119,7 @@ class _PrivateGiftListPageState extends State<PrivateGiftListPage> {
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => CreateGift(
+                        builder: (context) => CreatePrivateGiftPage(
                           eventId: widget.eventId,
                           gift: gift,
                           isEdit: true,
@@ -152,16 +130,13 @@ class _PrivateGiftListPageState extends State<PrivateGiftListPage> {
                   } else if (value == 'delete') {
                     showDialog(
                       context: context,
-                      builder: (BuildContext context) {
+                      builder: (context) {
                         return AlertDialog(
                           title: const Text('Confirm Delete'),
-                          content: const Text(
-                              'Are you sure you want to delete this gift?'),
+                          content: const Text('Are you sure you want to delete this gift?'),
                           actions: [
                             TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
+                              onPressed: () => Navigator.of(context).pop(),
                               child: const Text('Cancel'),
                             ),
                             TextButton(
@@ -178,14 +153,8 @@ class _PrivateGiftListPageState extends State<PrivateGiftListPage> {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Text('Edit'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Text('Delete'),
-                  ),
+                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  const PopupMenuItem(value: 'delete', child: Text('Delete')),
                 ],
               ),
             ),
@@ -195,17 +164,12 @@ class _PrivateGiftListPageState extends State<PrivateGiftListPage> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-          ),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
           onPressed: () async {
             await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => CreateGift(
-                  eventId: widget.eventId,
-                  isEdit: false,
-                ),
+                builder: (context) => CreatePrivateGiftPage(eventId: widget.eventId, isEdit: false),
               ),
             );
             _loadGifts(); // Refresh after adding a new gift
