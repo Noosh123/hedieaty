@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:hedieaty/services/auth_service.dart';
 import 'package:hedieaty/services/event_service.dart';
 import 'package:hedieaty/services/gift_service.dart';
 import 'package:hedieaty/services/user_service.dart';
+import 'package:hedieaty/services/image_service.dart';
 import 'package:hedieaty/models/user_model.dart';
+import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -16,6 +20,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final UserService _userService = UserService();
   final EventService _eventService = EventService();
   final GiftService _giftService = GiftService();
+  final ImageService _imageService = ImageService();
 
   String? _userId;
   String? _name;
@@ -71,6 +76,83 @@ class _ProfilePageState extends State<ProfilePage> {
       });
     }
   }
+
+  Future<bool> _requestPermissions() async {
+    final cameraPermission = await Permission.camera.request();
+    final storagePermission = await Permission.storage.request();
+
+    if (cameraPermission.isGranted && storagePermission.isGranted) {
+      return true;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Camera and Storage permissions are required.')),
+      );
+      return false;
+    }
+  }
+
+  Future<void> _uploadProfilePicture() async {
+    final ImagePicker picker = ImagePicker();
+
+    // Request permissions first
+    final hasPermission = await _requestPermissions();
+    if (!hasPermission) return;
+
+    try {
+      // Show dialog to choose between camera or gallery
+      final source = await showDialog<ImageSource>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Select Image Source"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, ImageSource.camera),
+              child: const Text("Camera"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, ImageSource.gallery),
+              child: const Text("Gallery"),
+            ),
+          ],
+        ),
+      );
+
+      if (source == null) return; // User dismissed the dialog
+
+      // Pick the image based on the chosen source
+      final XFile? pickedImage = await picker.pickImage(source: source);
+
+      if (pickedImage != null) {
+        setState(() => _isLoading = true); // Show loading indicator
+
+        // Upload the image to ImgBB
+        final imageUrl = await _imageService.uploadImage(pickedImage.path);
+
+        if (imageUrl != null) {
+          // Update the user's profile image URL in Firestore
+          if (_userId != null) {
+            await _userService.updateUserProfile(_userId!, {'profileImage': imageUrl});
+          }
+
+          setState(() => _profilePictureUrl = imageUrl);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile picture updated successfully!')),
+          );
+        } else {
+          throw Exception("Image upload failed");
+        }
+      }
+    } catch (e) {
+      print("Error uploading profile picture: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to upload profile picture')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
 
   Future<void> _updateEmail(String newEmail) async {
     try {
@@ -134,9 +216,7 @@ class _ProfilePageState extends State<ProfilePage> {
             // Profile Picture
             Center(
               child: GestureDetector(
-                onTap: () {
-                  print('Change profile picture'); // Implement image picker
-                },
+                onTap: _uploadProfilePicture,
                 child: CircleAvatar(
                   radius: 50,
                   backgroundImage: NetworkImage(_profilePictureUrl!),
