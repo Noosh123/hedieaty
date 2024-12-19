@@ -53,4 +53,37 @@ class GiftModel {
       'pledgedBy': pledgedBy,
     };
   }
+  // Convert GiftModel to Local Database Map
+  Map<String, dynamic> toLocalDatabaseMap() {
+    return {
+      'id': id,
+      'eventId': eventId,
+      'userId': userId,
+      'name': name,
+      'description': description,
+      'category': category,
+      'price': price,
+      'image': image,
+      'status': status,
+      'pledgedBy': pledgedBy,
+    };
+  }
+
+  // Convert Local Database Map to GiftModel
+  factory GiftModel.fromLocalDatabaseMap(Map<String, dynamic> map) {
+    return GiftModel(
+      id: map['id'],
+      eventId: map['eventId'],
+      userId: map['userId'],
+      name: map['name'],
+      description: map['description'],
+      category: map['category'],
+      price: map['price'] is int ? (map['price'] as int).toDouble() : map['price'],
+      image: map['image'],
+      status: map['status'],
+      pledgedBy: map['pledgedBy'],
+    );
+  }
+
+
 }
