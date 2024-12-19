@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EventModel {
   final String id;
-  final String userId; // ID of the user who created the event
+  final String userId;
   final String name;
   final String category;
   final DateTime date;
@@ -42,5 +42,31 @@ class EventModel {
       'location': location,
       'description': description,
     };
+  }
+
+  // Convert EventModel to Local Database Map
+  Map<String, dynamic> toLocalDatabaseMap() {
+    return {
+      'id': id,
+      'userId': userId,
+      'name': name,
+      'category': category,
+      'date': date.toIso8601String(), // Save date as ISO string
+      'location': location,
+      'description': description,
+    };
+  }
+
+  // Convert Local Database Map to EventModel
+  factory EventModel.fromLocalDatabaseMap(Map<String, dynamic> map) {
+    return EventModel(
+      id: map['id'],
+      userId: map['userId'],
+      name: map['name'],
+      category: map['category'],
+      date: DateTime.parse(map['date']), // Parse ISO string back to DateTime
+      location: map['location'],
+      description: map['description'],
+    );
   }
 }
