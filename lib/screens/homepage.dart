@@ -25,6 +25,7 @@ class _HomePageState extends State<HomePage> {
 
   List<FriendModel> _friends = [];
   Map<String, int> _upcomingEventsCount = {};
+  Map<String, String> _profileImages = {};
   List<FriendModel> _filteredFriends = [];
   List<NotificationModel> _notifications = [];
 
@@ -42,15 +43,24 @@ class _HomePageState extends State<HomePage> {
     try {
       String currentUserId = _authService.currentUser!.uid;
 
-      // Listen to the friends list using FriendService
       _friendService.getFriends(currentUserId).listen((friendsList) {
         setState(() {
           _friends = friendsList;
           _filteredFriends = friendsList;
         });
 
-        // Fetch upcoming event counts using EventService
+        // Fetch upcoming event counts and profile images
         for (var friend in friendsList) {
+          // Fetch profile images
+          _userService.getUser(friend.friendId).then((user) {
+            if (user != null) {
+              setState(() {
+                _profileImages[friend.friendId] = user.profileImage;
+              });
+            }
+          });
+
+          // Fetch upcoming events count
           _eventService.getUserEvents(friend.friendId).listen((events) {
             final upcomingEvents = events
                 .where((event) => event.date.isAfter(DateTime.now()))
@@ -68,6 +78,7 @@ class _HomePageState extends State<HomePage> {
       setState(() => _isLoading = false);
     }
   }
+
 
   Future<void> _checkNotifications() async {
     final currentUserId = _authService.currentUser!.uid;
@@ -233,18 +244,18 @@ class _HomePageState extends State<HomePage> {
                 itemCount: _filteredFriends.length,
                 itemBuilder: (context, index) {
                   final friend = _filteredFriends[index];
-                  final upcomingEvents =
-                      _upcomingEventsCount[friend.friendId] ?? 0;
+                  final upcomingEvents = _upcomingEventsCount[friend.friendId] ?? 0;
+                  final profileImage = _profileImages[friend.friendId] ?? '';
 
                   return Card(
                     child: ListTile(
-                      leading: const CircleAvatar(
-                        backgroundImage: AssetImage(
-                            'assets/default.png'), // Placeholder image
+                      leading: CircleAvatar(
+                        backgroundImage: profileImage.isNotEmpty
+                            ? NetworkImage(profileImage)
+                            : const AssetImage('assets/default.png') as ImageProvider,
                       ),
                       title: Text(friend.friendName),
-                      subtitle: Text(
-                          'Upcoming Events: $upcomingEvents'),
+                      subtitle: Text('Upcoming Events: $upcomingEvents'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
