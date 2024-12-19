@@ -69,4 +69,24 @@ class EventModel {
       description: map['description'],
     );
   }
+  // CopyWith method for creating updated instances
+  EventModel copyWith({
+    String? id,
+    String? userId,
+    String? name,
+    String? category,
+    DateTime? date,
+    String? location,
+    String? description,
+  }) {
+    return EventModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      category: category ?? this.category,
+      date: date ?? this.date,
+      location: location ?? this.location,
+      description: description ?? this.description,
+    );
+  }
 }
