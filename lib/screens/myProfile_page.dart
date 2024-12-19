@@ -5,6 +5,7 @@ import 'package:hedieaty/services/event_service.dart';
 import 'package:hedieaty/services/gift_service.dart';
 import 'package:hedieaty/services/user_service.dart';
 import 'package:hedieaty/services/image_service.dart';
+import 'package:hedieaty/services/local/local_event_service.dart';
 import 'package:hedieaty/models/user_model.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
@@ -21,12 +22,14 @@ class _ProfilePageState extends State<ProfilePage> {
   final EventService _eventService = EventService();
   final GiftService _giftService = GiftService();
   final ImageService _imageService = ImageService();
+  final LocalEventService _localEventService = LocalEventService();
 
   String? _userId;
   String? _name;
   String? _email;
   String? _profilePictureUrl = "https://via.placeholder.com/150";
   int _createdEventsCount = 0;
+  int _privateEventsCount = 0;
   int _pledgedGiftsCount = 0;
   bool _isLoading = true;
 
@@ -66,6 +69,12 @@ class _ProfilePageState extends State<ProfilePage> {
           setState(() {
             _pledgedGiftsCount = gifts.length;
           });
+        });
+
+        // Fetch private events count from local database
+        final privateEvents = await _localEventService.getAllEvents();
+        setState(() {
+          _privateEventsCount = privateEvents.length;
         });
       }
     } catch (e) {
@@ -153,44 +162,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-
-  Future<void> _updateEmail(String newEmail) async {
-    try {
-      final user = _authService.currentUser;
-      if (user != null) {
-        await user.updateEmail(newEmail);
-        await _userService.updateUserProfile(user.uid, {'email': newEmail});
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email updated successfully!')),
-        );
-      }
-    } catch (e) {
-      print("Error updating email: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update email')),
-      );
-    }
-  }
-
-  Future<void> _saveProfile() async {
-    try {
-      if (_userId != null) {
-        await _userService.updateUserProfile(_userId!, {'name': _name});
-        if (_email != _authService.currentUser?.email) {
-          await _updateEmail(_email!);
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully!')),
-        );
-      }
-    } catch (e) {
-      print("Error saving profile: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update profile')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -265,7 +236,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ListTile(
               leading: const Icon(Icons.event),
               title: const Text('My Private Events'),
-              subtitle: Text('$_createdEventsCount Events'),
+              subtitle: Text('$_privateEventsCount Events'),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
                 Navigator.pushNamed(context, '/myPrivateEventlist');
@@ -290,7 +261,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.yellow[800],
                 ),
-                onPressed: _saveProfile,
+                onPressed: () {
+                  // Save profile changes
+                },
                 child: const Text('Save Changes'),
               ),
             ),
