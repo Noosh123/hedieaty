@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty/models/event_model.dart';
-import 'package:hedieaty/screens/createEvent_page.dart';
-import 'package:hedieaty/screens/myGiftlist_page.dart';
+import 'package:hedieaty/screens/local/PrivateGiftListPage.dart';
+import 'package:hedieaty/screens/local/create_private_event_page.dart';
+
+import 'package:hedieaty/services/auth_service.dart';
 import 'package:hedieaty/services/local/local_event_service.dart';
+import 'package:hedieaty/services/event_service.dart';
 
 class PrivateEventListPage extends StatefulWidget {
   @override
@@ -11,30 +14,30 @@ class PrivateEventListPage extends StatefulWidget {
 
 class _PrivateEventListPageState extends State<PrivateEventListPage> {
   final LocalEventService _localEventService = LocalEventService();
+  final AuthService _authService = AuthService();
+  final EventService _eventService = EventService(); // For publishing events
 
   List<EventModel> _events = [];
+  List<String> _selectedEventIds = [];
   String _sortOption = 'name'; // Default sorting option
   bool _isLoading = true;
-  final Set<String> _selectedEvents = {};
 
   @override
   void initState() {
     super.initState();
-    _loadUserEvents();
+    _loadPrivateEvents();
   }
 
-  void _loadUserEvents() async {
+  void _loadPrivateEvents() async {
     setState(() => _isLoading = true);
-
     try {
       final events = await _localEventService.getAllEvents();
-      setState(() {
-        _events = events;
-        _isLoading = false;
-      });
+      setState(() => _events = events);
       _sortEvents();
     } catch (e) {
-      print('Error loading events: $e');
+      print('Error loading private events: $e');
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -51,21 +54,45 @@ class _PrivateEventListPageState extends State<PrivateEventListPage> {
   }
 
   Future<void> _deleteEvent(String eventId) async {
-    await _localEventService.deleteEvent(eventId);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Event deleted successfully!')),
-    );
-    _loadUserEvents();
+    try {
+      await _localEventService.deleteEvent(eventId);
+      _loadPrivateEvents(); // Refresh the event list
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Event deleted successfully!')),
+      );
+    } catch (e) {
+      print('Error deleting event: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete event: $e')),
+      );
+    }
   }
 
   Future<void> _publishSelectedEvents() async {
-    // Logic to publish events to Firestore and delete from local DB
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${_selectedEvents.length} events published!')),
-    );
-
-    // After publishing, refresh the list
-    _loadUserEvents();
+    setState(() => _isLoading = true);
+    try {
+      for (var eventId in _selectedEventIds) {
+        final event = await _localEventService.getEventById(eventId);
+        if (event != null) {
+          // Publish to Firestore
+          await _eventService.addEvent(event);
+          // Remove from local database
+          await _localEventService.deleteEvent(eventId);
+        }
+      }
+      _selectedEventIds.clear();
+      _loadPrivateEvents(); // Refresh the event list
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selected events published successfully!')),
+      );
+    } catch (e) {
+      print('Error publishing events: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to publish events: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -77,9 +104,7 @@ class _PrivateEventListPageState extends State<PrivateEventListPage> {
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
-              setState(() {
-                _sortOption = value;
-              });
+              setState(() => _sortOption = value);
               _sortEvents();
             },
             itemBuilder: (context) => [
@@ -102,23 +127,25 @@ class _PrivateEventListPageState extends State<PrivateEventListPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _events.isEmpty
-          ? const Center(child: Text('No events found'))
+          ? const Center(child: Text('No private events found'))
           : ListView.builder(
         itemCount: _events.length,
         itemBuilder: (context, index) {
           final event = _events[index];
+          final isSelected = _selectedEventIds.contains(event.id);
+
           return Card(
             elevation: 2,
             margin: const EdgeInsets.symmetric(vertical: 8),
             child: ListTile(
               leading: Checkbox(
-                value: _selectedEvents.contains(event.id),
-                onChanged: (isChecked) {
+                value: isSelected,
+                onChanged: (value) {
                   setState(() {
-                    if (isChecked == true) {
-                      _selectedEvents.add(event.id);
+                    if (value == true) {
+                      _selectedEventIds.add(event.id);
                     } else {
-                      _selectedEvents.remove(event.id);
+                      _selectedEventIds.remove(event.id);
                     }
                   });
                 },
@@ -131,13 +158,15 @@ class _PrivateEventListPageState extends State<PrivateEventListPage> {
               trailing: PopupMenuButton<String>(
                 onSelected: (value) async {
                   if (value == 'edit') {
-                    Navigator.push(
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            CreateEventPage(event: event),
+                        builder: (context) => CreatePrivateEventPage(
+                          event: event,
+                        ),
                       ),
-                    ).then((_) => _loadUserEvents());
+                    );
+                    _loadPrivateEvents(); // Refresh after editing
                   } else if (value == 'delete') {
                     await _deleteEvent(event.id);
                   }
@@ -157,9 +186,8 @@ class _PrivateEventListPageState extends State<PrivateEventListPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => MyGiftListPage(
+                    builder: (context) => PrivateGiftListPage(
                       eventId: event.id,
-                      isUpcoming: true,
                     ),
                   ),
                 );
@@ -169,22 +197,28 @@ class _PrivateEventListPageState extends State<PrivateEventListPage> {
         },
       ),
       floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          FloatingActionButton(
-            backgroundColor: Colors.blue,
-            heroTag: 'publishEvents',
-            onPressed: _publishSelectedEvents,
-            child: const Icon(Icons.cloud_upload, color: Colors.white),
-          ),
-          const SizedBox(height: 16),
+          if (_selectedEventIds.isNotEmpty)
+            FloatingActionButton.extended(
+              backgroundColor: Colors.blue,
+              onPressed: _publishSelectedEvents,
+              icon: const Icon(Icons.cloud_upload),
+              label: const Text('Publish'),
+            ),
+          const SizedBox(height: 8),
           FloatingActionButton(
             backgroundColor: Colors.green,
-            heroTag: 'createEvent',
-            onPressed: () {
-              Navigator.pushNamed(context, '/createPrivateEvent');
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CreatePrivateEventPage(),
+                ),
+              );
+              _loadPrivateEvents(); // Refresh after adding a new event
             },
-            child: const Icon(Icons.add, color: Colors.white),
+            child: const Icon(Icons.add_card_sharp, color: Colors.white),
           ),
         ],
       ),
