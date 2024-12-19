@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty/models/gift_model.dart';
+import 'package:hedieaty/models/notification_model.dart';
 import 'package:hedieaty/services/auth_service.dart';
+import 'package:hedieaty/services/event_service.dart';
 import 'package:hedieaty/services/gift_service.dart';
+import 'package:hedieaty/services/notification_service.dart';
+import 'package:hedieaty/services/user_service.dart';
 
 class GiftDetailsPage extends StatefulWidget {
   final GiftModel gift;
@@ -15,6 +19,10 @@ class GiftDetailsPage extends StatefulWidget {
 class _GiftDetailsPageState extends State<GiftDetailsPage> {
   final GiftService _giftService = GiftService();
   final AuthService _authService = AuthService();
+  final NotificationService _notificationService = NotificationService();
+  final UserService _userService = UserService();
+  final EventService _eventService = EventService();
+
   bool _isPledged = false;
 
   @override
@@ -23,16 +31,45 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
     _isPledged = widget.gift.status == 'pledged';
   }
 
+  Future<void> _sendNotification(String type) async {
+    try {
+      final currentUserId = _authService.currentUser!.uid;
+
+      // Get details of the user and event
+      final currentUser = await _userService.getUser(currentUserId);
+      final event = await _eventService.getEventById(widget.gift.eventId);
+
+      if (currentUser != null && event != null) {
+        final notification = NotificationModel(
+          message:
+          '${currentUser.name} has ${type == "pledge" ? "pledged" : "unpledged"} the gift "${widget.gift.name}" for the event "${event.name}".',
+          timestamp: DateTime.now(),
+          type: type,
+          fromUserId: currentUserId,
+          eventId: widget.gift.eventId,
+          giftId: widget.gift.id,
+        );
+
+        // Send notification to the gift owner
+        await _notificationService.addNotification(widget.gift.userId, notification);
+      }
+    } catch (e) {
+      print('Error sending notification: $e');
+    }
+  }
+
   Future<void> _togglePledge() async {
     final currentUserId = _authService.currentUser!.uid;
 
     if (_isPledged) {
       await _giftService.unpledgeGift(widget.gift.id);
+      await _sendNotification('unpledge');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Gift unpledged successfully!')),
       );
     } else {
       await _giftService.pledgeGift(widget.gift.id, currentUserId);
+      await _sendNotification('pledge');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Gift pledged successfully!')),
       );

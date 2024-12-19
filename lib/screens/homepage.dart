@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty/models/friend_model.dart';
+import 'package:hedieaty/models/notification_model.dart';
 import 'package:hedieaty/screens/eventlist_page.dart';
 import 'package:hedieaty/services/auth_service.dart';
 import 'package:hedieaty/services/event_service.dart';
 import 'package:hedieaty/services/friend_service.dart';
 import 'package:hedieaty/services/authWrapper.dart';
+import 'package:hedieaty/services/notification_service.dart';
+import 'package:hedieaty/services/user_service.dart';
+import 'package:hedieaty/services/gift_service.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -15,10 +19,14 @@ class _HomePageState extends State<HomePage> {
   final AuthService _authService = AuthService();
   final FriendService _friendService = FriendService();
   final EventService _eventService = EventService();
+  final NotificationService _notificationService = NotificationService();
+  final UserService _userService = UserService();
+  final GiftService _giftService = GiftService();
 
   List<FriendModel> _friends = [];
   Map<String, int> _upcomingEventsCount = {};
   List<FriendModel> _filteredFriends = [];
+  List<NotificationModel> _notifications = [];
 
   bool _isLoading = true;
   String _searchQuery = '';
@@ -27,9 +35,9 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadFriendsAndEvents();
+    _checkNotifications();
   }
 
-  // Fetch friends and their upcoming events count using EventService
   void _loadFriendsAndEvents() async {
     try {
       String currentUserId = _authService.currentUser!.uid;
@@ -44,7 +52,6 @@ class _HomePageState extends State<HomePage> {
         // Fetch upcoming event counts using EventService
         for (var friend in friendsList) {
           _eventService.getUserEvents(friend.friendId).listen((events) {
-            // Filter only upcoming events
             final upcomingEvents = events
                 .where((event) => event.date.isAfter(DateTime.now()))
                 .toList();
@@ -61,6 +68,102 @@ class _HomePageState extends State<HomePage> {
       setState(() => _isLoading = false);
     }
   }
+
+  Future<void> _checkNotifications() async {
+    final currentUserId = _authService.currentUser!.uid;
+
+    try {
+      final notifications =
+      await _notificationService.getNotifications(currentUserId);
+
+      if (notifications.isNotEmpty) {
+        setState(() {
+          _notifications = notifications.reversed.toList();
+        });
+
+        // Show notifications in a modal pop-up
+        _showNotificationPopup();
+
+        // Clear notifications from Firestore after showing them
+        await _notificationService.clearNotifications(currentUserId);
+      }
+    } catch (e) {
+      print('Error fetching notifications: $e');
+    }
+  }
+
+  Future<void> _showNotificationPopup() async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Notifications"),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 300,
+            child: ListView.builder(
+              itemCount: _notifications.length,
+              itemBuilder: (context, index) {
+                final notification = _notifications[index];
+                final message = notification.message;
+                final keyword = notification.type == "pledge"
+                    ? "pledged"
+                    : "unpledged";
+
+                // Split the message into parts
+                final parts = message.split(keyword);
+
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: ListTile(
+                    leading: const Icon(Icons.notifications_active,
+                        color: Colors.blue),
+                    title: RichText(
+                      text: TextSpan(
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontSize: 16,
+                        ),
+                        children: [
+                          TextSpan(text: parts[0]), // Text before the keyword
+                          TextSpan(
+                            text: keyword,
+                            style: TextStyle(
+                              color: notification.type == "pledge"
+                                  ? Colors.green
+                                  : Colors.red,
+                            ),
+                          ),
+                          if (parts.length > 1)
+                            TextSpan(text: parts[1]), // Text after the keyword
+                        ],
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Time: ${notification.timestamp.toLocal()}',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Close"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
+
+
 
   void _filterFriends(String query) {
     setState(() {
@@ -140,8 +243,8 @@ class _HomePageState extends State<HomePage> {
                             'assets/default.png'), // Placeholder image
                       ),
                       title: Text(friend.friendName),
-                      subtitle:
-                      Text('Upcoming Events: $upcomingEvents'),
+                      subtitle: Text(
+                          'Upcoming Events: $upcomingEvents'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -174,7 +277,6 @@ class _HomePageState extends State<HomePage> {
             // Add Friend and Create Event Buttons
             Container(
               decoration: BoxDecoration(
-                //color: Colors.purple.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(

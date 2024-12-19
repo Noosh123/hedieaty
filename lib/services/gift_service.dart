@@ -23,10 +23,26 @@ class GiftService {
           .where('eventId', isEqualTo: eventId)
           .snapshots()
           .map((snapshot) => snapshot.docs
-          .map((doc) => GiftModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+          .map((doc) =>
+          GiftModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
           .toList());
     } catch (e) {
       print("Error fetching gifts: $e");
+      rethrow;
+    }
+  }
+
+  // Fetch a single gift by its ID
+  Future<GiftModel?> getGiftById(String giftId) async {
+    try {
+      final doc = await _giftsCollection.doc(giftId).get();
+      if (doc.exists) {
+        return GiftModel.fromFirestore(
+            doc.data() as Map<String, dynamic>, doc.id);
+      }
+      return null; // Gift not found
+    } catch (e) {
+      print("Error fetching gift by ID: $e");
       rethrow;
     }
   }
@@ -41,6 +57,7 @@ class GiftService {
       rethrow;
     }
   }
+
   // Fetch all pledged gifts by a specific user
   Stream<List<GiftModel>> getPledgedGiftsByUser(String userId) {
     try {
@@ -48,14 +65,14 @@ class GiftService {
           .where('pledgedBy', isEqualTo: userId)
           .snapshots()
           .map((snapshot) => snapshot.docs
-          .map((doc) => GiftModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+          .map((doc) =>
+          GiftModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
           .toList());
     } catch (e) {
       print("Error fetching pledged gifts: $e");
       rethrow;
     }
   }
-
 
   // Pledge a gift
   Future<void> pledgeGift(String giftId, String userId) async {
