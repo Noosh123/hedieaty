@@ -84,6 +84,32 @@ class GiftModel {
       pledgedBy: map['pledgedBy'],
     );
   }
+  // CopyWith method for creating a new instance with updated fields
+  GiftModel copyWith({
+    String? id,
+    String? eventId,
+    String? userId,
+    String? name,
+    String? description,
+    String? category,
+    double? price,
+    String? image,
+    String? status,
+    String? pledgedBy,
+  }) {
+    return GiftModel(
+      id: id ?? this.id,
+      eventId: eventId ?? this.eventId,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      price: price ?? this.price,
+      image: image ?? this.image,
+      status: status ?? this.status,
+      pledgedBy: pledgedBy ?? this.pledgedBy,
+    );
+  }
 
 
 }

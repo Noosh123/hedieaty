@@ -80,6 +80,18 @@ class EventService {
       rethrow;
     }
   }
+  // Add a new method in EventService
+  Future<String> addEventAndGetId(EventModel event) async {
+    try {
+      final docRef = await _eventsCollection.add(event.toFirestore());
+      print("Event added successfully to Firestore!");
+      return docRef.id; // Return the newly created Firestore event ID
+    } catch (e) {
+      print("Error adding event: $e");
+      rethrow;
+    }
+  }
+
 
 }
 

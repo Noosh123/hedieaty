@@ -4,8 +4,10 @@ import 'package:hedieaty/screens/local/PrivateGiftListPage.dart';
 import 'package:hedieaty/screens/local/create_private_event_page.dart';
 
 import 'package:hedieaty/services/auth_service.dart';
+import 'package:hedieaty/services/gift_service.dart';
 import 'package:hedieaty/services/local/local_event_service.dart';
 import 'package:hedieaty/services/event_service.dart';
+import 'package:hedieaty/services/local/local_gift_service.dart';
 
 class PrivateEventListPage extends StatefulWidget {
   @override
@@ -16,6 +18,8 @@ class _PrivateEventListPageState extends State<PrivateEventListPage> {
   final LocalEventService _localEventService = LocalEventService();
   final AuthService _authService = AuthService();
   final EventService _eventService = EventService(); // For publishing events
+  final LocalGiftService _localGiftService = LocalGiftService();
+  final GiftService _giftService = GiftService();
 
   List<EventModel> _events = [];
   List<String> _selectedEventIds = [];
@@ -72,28 +76,52 @@ class _PrivateEventListPageState extends State<PrivateEventListPage> {
     setState(() => _isLoading = true);
     try {
       for (var eventId in _selectedEventIds) {
+        // Fetch the event from the local database
         final event = await _localEventService.getEventById(eventId);
+
         if (event != null) {
-          // Publish to Firestore
-          await _eventService.addEvent(event);
-          // Remove from local database
+          // Assign the current user's ID to the event
+          final userId = _authService.currentUser!.uid;
+          final eventWithUserId = event.copyWith(userId: userId);
+
+          // Publish the event to Firestore and get the new Firestore event ID
+          final newEventId = await _eventService.addEventAndGetId(eventWithUserId);
+
+          // Fetch all gifts associated with the event from the local database
+          final gifts = await _localGiftService.getGiftsByEventId(eventId);
+
+          for (var gift in gifts) {
+            // Update the eventId in the gift to the new Firestore event ID
+            final updatedGift = gift.copyWith(eventId: newEventId);
+
+            // Publish the gift to Firestore
+            await _giftService.addGift(updatedGift);
+
+            // Remove the gift from the local database
+            await _localGiftService.deleteGift(gift.id);
+          }
+
+          // Remove the event from the local database
           await _localEventService.deleteEvent(eventId);
         }
       }
+
       _selectedEventIds.clear();
       _loadPrivateEvents(); // Refresh the event list
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selected events published successfully!')),
+        const SnackBar(content: Text('Selected events and gifts published successfully!')),
       );
     } catch (e) {
-      print('Error publishing events: $e');
+      print('Error publishing events and gifts: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to publish events: $e')),
+        SnackBar(content: Text('Failed to publish events and gifts: $e')),
       );
     } finally {
       setState(() => _isLoading = false);
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
