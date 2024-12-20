@@ -35,6 +35,11 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
   final TextEditingController _dateController = TextEditingController();
   bool _isLoading = false;
+  final Color primaryColor = const Color(0xFFFF7B7B); // Soft coral
+  final Color secondaryColor = const Color(0xFF98D7C2); // Mint green
+  final Color accentColor = const Color(0xFFE2D1F9); // Light purple
+  final Color goldAccent = const Color(0xFFFFD700); // Gold
+  final Color backgroundColor = const Color(0xFFFFFAF0); // Cream
 
   @override
   void initState() {
@@ -110,9 +115,15 @@ class _CreateEventPageState extends State<CreateEventPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.yellow[800],
-        title: Text(widget.event == null ? 'Create Event' : 'Edit Event'),
+
+        backgroundColor: primaryColor,
+        title: Text(widget.event == null ? 'Create Event' : 'Edit Event',style: TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        )),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

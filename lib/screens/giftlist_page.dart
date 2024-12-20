@@ -32,6 +32,12 @@ class _GiftListPageState extends State<GiftListPage> {
   List<GiftModel> _gifts = [];
   bool _isLoading = true;
 
+  final Color primaryColor = const Color(0xFFFF7B7B); // Soft coral
+  final Color secondaryColor = const Color(0xFF98D7C2); // Mint green
+  final Color accentColor = const Color(0xFFE2D1F9); // Light purple
+  final Color goldAccent = const Color(0xFFFFD700); // Gold
+  final Color backgroundColor = const Color(0xFFFFFAF0); // Cream
+
   @override
   void initState() {
     super.initState();
@@ -50,19 +56,26 @@ class _GiftListPageState extends State<GiftListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.yellow[800],
-        title: const Text('Gift List'),
+        backgroundColor: primaryColor,
+        title: Text(
+          'Gifts for ${widget.eventName}',
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
       ),
       body: Column(
         children: [
-          // Event Details Container
           _buildEventDetails(),
-          // Gift List
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _gifts.isEmpty
-              ? const Center(child: Text('No gifts found for this event'))
+              ? const Center(
+            child: Text(
+              'No gifts found for this event',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          )
               : Expanded(
             child: ListView.builder(
               itemCount: _gifts.length,
@@ -70,46 +83,99 @@ class _GiftListPageState extends State<GiftListPage> {
                 final gift = _gifts[index];
                 final isAvailable = gift.status == 'available';
 
-                return Card(
-                   // Unique key for each gift
-                  elevation: 2,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
+                return Container(
+                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.white, accentColor.withOpacity(0.2)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.2),
+                        spreadRadius: 2,
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
                   child: ListTile(
                     key: Key('gift_$index'),
-                    leading: CircleAvatar(
-                      key: Key('gift_avatar_${gift.id}'), // Key for Avatar
-                      backgroundImage: gift.image.isNotEmpty
-                          ? NetworkImage(gift.image)
-                          : null, // No background image if gift image is empty
-                      radius: 30,
-                      child: gift.image.isEmpty
-                          ? const Icon(
-                        Icons.card_giftcard,
-                        size: 30,
-                        color: Colors.white, // Icon color for better visibility
-                      )
-                          : null, // No icon if gift image is available
-                      backgroundColor: gift.image.isEmpty
-                          ? Colors.orange // Background color for the placeholder icon
-                          : null,
-                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    leading: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: goldAccent,
+                          width: 2,
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 30,
+                        backgroundImage: gift.image.isNotEmpty ? NetworkImage(gift.image) : null,
 
-                    title: Text(gift.name),
+                        child: gift.image.isEmpty
+                            ? Icon(
+                          Icons.card_giftcard,
+                          color: primaryColor,
+                          size: 28,
+                        )
+                            : null,
+                        backgroundColor: gift.image.isEmpty ? primaryColor.withOpacity(0.1) : null,
+                      ),
+                    ),
+                    title: Text(
+                      gift.name,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Category: ${gift.category}'),
-                        Text(
-                            'Price: \$${gift.price.toStringAsFixed(2)}'),
-                        Text(
-                          isAvailable ? 'Available' : 'Pledged',
-                          style: TextStyle(
-                            color: isAvailable
-                                ? Colors.green
-                                : Colors.red,
-                          ),
+                        Row(
+                          children: [
+                            Icon(Icons.category, size: 16, color: primaryColor),
+                            const SizedBox(width: 4),
+                            Text('Category: ${gift.category}'),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Icon(Icons.attach_money, size: 16, color: secondaryColor),
+                            const SizedBox(width: 4),
+                            Text('Price: \$${gift.price.toStringAsFixed(2)}'),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Icon(
+                              isAvailable ? Icons.check_circle : Icons.cancel,
+                              size: 16,
+                              color: isAvailable ? Colors.green : Colors.red,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              isAvailable ? 'Available' : 'Pledged',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isAvailable ? Colors.green : Colors.red,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
+                    ),
+                    trailing: Container(
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        Icons.arrow_forward,
+                        color: primaryColor,
+                      ),
                     ),
                     onTap: isAvailable
                         ? () {
@@ -123,12 +189,6 @@ class _GiftListPageState extends State<GiftListPage> {
                       );
                     }
                         : null,
-                    trailing: Icon(
-                      Icons.circle,
-                      color:
-                      isAvailable ? Colors.green : Colors.yellow,
-                      size: 16,
-                    ),
                   ),
                 );
               },
@@ -141,18 +201,21 @@ class _GiftListPageState extends State<GiftListPage> {
 
   Widget _buildEventDetails() {
     return Container(
-      key: const Key('event_details_container'),
       padding: const EdgeInsets.all(16.0),
       margin: const EdgeInsets.only(bottom: 16.0),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.0),
+        gradient: LinearGradient(
+          colors: [primaryColor.withOpacity(0.2), secondaryColor.withOpacity(0.2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
+            color: Colors.grey.withOpacity(0.2),
             spreadRadius: 2,
-            blurRadius: 6,
-            offset: const Offset(0, 3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -165,15 +228,11 @@ class _GiftListPageState extends State<GiftListPage> {
               const SizedBox(width: 8),
               Text(
                 widget.eventName,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -182,7 +241,7 @@ class _GiftListPageState extends State<GiftListPage> {
               Expanded(
                 child: Text(
                   widget.eventDescription,
-                  style: const TextStyle(fontSize: 16, color: Colors.black54),
+                  style: const TextStyle(fontSize: 16),
                 ),
               ),
             ],
@@ -190,12 +249,11 @@ class _GiftListPageState extends State<GiftListPage> {
           const SizedBox(height: 12),
           Row(
             children: [
-              const Icon(Icons.location_on,
-                  color: Colors.redAccent, size: 20.0),
+              const Icon(Icons.location_on, color: Colors.redAccent, size: 20.0),
               const SizedBox(width: 8),
               Text(
                 widget.eventLocation,
-                style: const TextStyle(fontSize: 16, color: Colors.black54),
+                style: const TextStyle(fontSize: 16),
               ),
             ],
           ),
@@ -205,8 +263,8 @@ class _GiftListPageState extends State<GiftListPage> {
               const Icon(Icons.calendar_today, color: Colors.green, size: 20.0),
               const SizedBox(width: 8),
               Text(
-                "Date: ${widget.eventDate.toLocal()}".split(' ')[0],
-                style: const TextStyle(fontSize: 16, color: Colors.black54),
+                "Date: ${widget.eventDate.toLocal()}".split(' ')[1],
+                style: const TextStyle(fontSize: 16),
               ),
             ],
           ),

@@ -18,6 +18,12 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
   List<GiftModel> _gifts = [];
   bool _isLoading = true;
 
+  final Color primaryColor = const Color(0xFFFF7B7B); // Soft coral
+  final Color secondaryColor = const Color(0xFF98D7C2); // Mint green
+  final Color accentColor = const Color(0xFFE2D1F9); // Light purple
+  final Color goldAccent = const Color(0xFFFFD700); // Gold
+  final Color backgroundColor = const Color(0xFFFFFAF0); // Cream
+
   @override
   void initState() {
     super.initState();
@@ -43,9 +49,13 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.yellow[800],
-        title: const Text('My Gift List'),
+        backgroundColor: primaryColor,
+        title: const Text(
+          'My Gift List',
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
@@ -84,45 +94,96 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _gifts.isEmpty
-          ? const Center(child: Text('No gifts found for this event'))
+          ? const Center(
+        child: Text(
+          'No gifts found for this event',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+      )
           : ListView.builder(
         itemCount: _gifts.length,
         itemBuilder: (context, index) {
           final gift = _gifts[index];
           final isAvailable = gift.status == 'available';
 
-          return Card(
-            elevation: 2,
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundImage: gift.image.isNotEmpty
-                    ? NetworkImage(gift.image)
-                    : null, // No background image if gift image is empty
-                radius: 30,
-                child: gift.image.isEmpty
-                    ? const Icon(
-                  Icons.card_giftcard,
-                  size: 30,
-                  color: Colors.white, // Icon color for better visibility
-                )
-                    : null, // No icon if gift image is available
-                backgroundColor: gift.image.isEmpty
-                    ? Colors.orange // Background color for the placeholder icon
-                    : null,
+          return Container(
+            margin: const EdgeInsets.symmetric(vertical: 8.0),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.white, accentColor.withOpacity(0.2)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
               ),
-
-              title: Text(gift.name),
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.2),
+                  spreadRadius: 2,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: goldAccent,
+                    width: 2,
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 30,
+                  backgroundImage: gift.image.isNotEmpty ? NetworkImage(gift.image) : null,
+                  child: gift.image.isEmpty
+                      ? Icon(
+                    Icons.card_giftcard,
+                    color: primaryColor,
+                    size: 28,
+                  )
+                      : null,
+                  backgroundColor: gift.image.isEmpty ? primaryColor.withOpacity(0.1) : null,
+                ),
+              ),
+              title: Text(
+                gift.name,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Category: ${gift.category}'),
-                  Text('Price: \$${gift.price.toStringAsFixed(2)}'),
-                  Text(
-                    isAvailable ? 'Available' : 'Pledged',
-                    style: TextStyle(
-                      color: isAvailable ? Colors.green : Colors.red,
-                    ),
+                  Row(
+                    children: [
+                      Icon(Icons.category, size: 16, color: primaryColor),
+                      const SizedBox(width: 4),
+                      Text('Category: ${gift.category}'),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Icon(Icons.attach_money, size: 16, color: secondaryColor),
+                      const SizedBox(width: 4),
+                      Text('Price: \$${gift.price.toStringAsFixed(2)}'),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Icon(
+                        isAvailable ? Icons.check_circle : Icons.cancel,
+                        size: 16,
+                        color: isAvailable ? Colors.green : Colors.red,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        isAvailable ? 'Available' : 'Pledged',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isAvailable ? Colors.green : Colors.red,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -139,15 +200,13 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
                         ),
                       ),
                     );
-
                   } else if (value == 'delete') {
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {
                         return AlertDialog(
                           title: const Text('Confirm Delete'),
-                          content: const Text(
-                              'Are you sure you want to delete this gift?'),
+                          content: const Text('Are you sure you want to delete this gift?'),
                           actions: [
                             TextButton(
                               onPressed: () {
@@ -208,7 +267,6 @@ class _MyGiftListPageState extends State<MyGiftListPage> {
           ),
         ),
       ),
-
     );
   }
 }

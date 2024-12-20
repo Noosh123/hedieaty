@@ -13,6 +13,11 @@ class MyEventListPage extends StatefulWidget {
 class _MyEventListPageState extends State<MyEventListPage> {
   final EventService _eventService = EventService();
   final AuthService _authService = AuthService();
+  final Color primaryColor = const Color(0xFFFF7B7B); // Soft coral
+  final Color secondaryColor = const Color(0xFF98D7C2); // Mint green
+  final Color accentColor = const Color(0xFFE2D1F9); // Light purple
+  final Color goldAccent = const Color(0xFFFFD700); // Gold
+  final Color backgroundColor = const Color(0xFFFFFAF0); // Cream
 
   List<EventModel> _events = [];
   String _sortOption = 'name'; // Default sorting option
@@ -70,9 +75,14 @@ class _MyEventListPageState extends State<MyEventListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.yellow[800],
-        title: const Text('My Events'),
+        backgroundColor: primaryColor,
+        title: const Text('My Events',style: TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
@@ -108,23 +118,84 @@ class _MyEventListPageState extends State<MyEventListPage> {
           final event = _events[index];
           final status = _getEventStatus(event);
 
-          return Card(
-            elevation: 2,
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            child: ListTile(
-              leading: Icon(
-                Icons.event,
-                color: status == 'Upcoming'
-                    ? Colors.green
-                    : (status == 'Current'
-                    ? Colors.orange
-                    : Colors.red),
+          return Container(
+            margin: const EdgeInsets.symmetric(vertical: 8.0),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.white, accentColor.withOpacity(0.2)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
               ),
-              title: Text(event.name),
-              subtitle: Text(
-                'Category: ${event.category}\n'
-                    'Status: $status\n'
-                    'Date: ${event.date.toLocal()}',
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.2),
+                  spreadRadius: 2,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: status == 'Upcoming'
+                        ? Colors.green
+                        : (status == 'Current' ? Colors.orange : Colors.red),
+                    width: 2,
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 25,
+                  backgroundColor: status == 'Upcoming'
+                      ? Colors.green.withOpacity(0.1)
+                      : (status == 'Current'
+                      ? Colors.orange.withOpacity(0.1)
+                      : Colors.red.withOpacity(0.1)),
+                  child: Icon(
+                    Icons.event,
+                    color: status == 'Upcoming'
+                        ? Colors.green
+                        : (status == 'Current' ? Colors.orange : Colors.red),
+                    size: 28,
+                  ),
+                ),
+              ),
+              title: Text(
+                event.name,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Category: ${event.category}',
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  Text(
+                    'Status: $status',
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today, size: 16, color: primaryColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Date: ${event.date.toLocal()}'.split(' ')[1],
+                        style: TextStyle(
+                          color: Colors.grey[800],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
               trailing: PopupMenuButton<String>(
                 onSelected: (value) async {
@@ -171,6 +242,7 @@ class _MyEventListPageState extends State<MyEventListPage> {
               },
             ),
           );
+
         },
       ),
       floatingActionButton: FloatingActionButton(

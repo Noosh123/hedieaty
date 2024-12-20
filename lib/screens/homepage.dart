@@ -34,6 +34,12 @@ class _HomePageState extends State<HomePage> {
 
   bool _isLoading = true;
   String _searchQuery = '';
+  // Add these color constants at the top of the class
+  final Color primaryColor = const Color(0xFFFF7B7B); // Soft coral
+  final Color secondaryColor = const Color(0xFF98D7C2); // Mint green
+  final Color accentColor = const Color(0xFFE2D1F9); // Light purple
+  final Color goldAccent = const Color(0xFFFFD700); // Gold
+  final Color backgroundColor = const Color(0xFFFFFAF0); // Cream
 
   @override
   void initState() {
@@ -209,6 +215,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         leading: IconButton(
           key: const Key('logout_button'),
@@ -220,129 +227,276 @@ class _HomePageState extends State<HomePage> {
                   (route) => false,
             );
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Logged out successfully')),
+              SnackBar(
+                content: const Text('Logged out successfully'),
+                backgroundColor: primaryColor,
+              ),
             );
           },
-          icon: const Icon(Icons.logout, size: 40),
+          icon: const Icon(Icons.logout, size: 40, color: Colors.white),
         ),
         centerTitle: true,
-        backgroundColor: Colors.yellow[800],
-        title: const Text('Hedieaty'),
+        backgroundColor: primaryColor,
+        elevation: 0,
+        title: const Text(
+          'Hedieaty',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         actions: [
           IconButton(
             key: const Key('profile_button'),
-            icon: const Icon(Icons.person_pin, size: 40),
+            icon: const Icon(Icons.person_pin, size: 40, color: Colors.white),
             onPressed: () {
               Navigator.pushNamed(context, '/myprofile');
             },
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            // Search Field
-            TextField(
-              key: const Key('search_bar'),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.purple.withOpacity(0.1),
-                prefixIcon: const Icon(Icons.search),
-                hintText: 'Search friends...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [backgroundColor, Colors.white],
+          ),
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              // Search Field with festive design
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.2),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  key: const Key('search_bar'),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    prefixIcon: Icon(Icons.search, color: primaryColor),
+                    hintText: 'Search friends...',
+                    hintStyle: TextStyle(color: primaryColor.withOpacity(0.7)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide(color: primaryColor, width: 2),
+                    ),
+                  ),
+                  onChanged: _filterFriends,
                 ),
               ),
-              onChanged: _filterFriends,
-            ),
-            const SizedBox(height: 8),
-            // Friends List
-            Expanded(
-              child: _filteredFriends.isEmpty
-                  ? const Center(child: Text('No friends found'))
-                  : ListView.builder(
-                itemCount: _filteredFriends.length,
-                itemBuilder: (context, index) {
-                  final friend = _filteredFriends[index];
-                  final upcomingEvents = _upcomingEventsCount[friend.friendId] ?? 0;
-                  final profileImage = _profileImages[friend.friendId] ?? '';
-
-                  return Card(
-                    child: ListTile(
-                      key: Key('friend_$index'),
-                      leading: CircleAvatar(
-                        backgroundImage: profileImage.isNotEmpty
-                            ? NetworkImage(profileImage)
-                            : NetworkImage('https://i.ibb.co/GFK3bM1/istockphoto-1332100919-612x612.jpg'),
+              const SizedBox(height: 16),
+              // Friends List with festive cards
+              Expanded(
+                child: _filteredFriends.isEmpty
+                    ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.card_giftcard,
+                          size: 64, color: primaryColor),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No friends found',
+                        style: TextStyle(
+                          color: primaryColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      title: Text(friend.friendName),
-                      subtitle: Text('Upcoming Events: $upcomingEvents'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (upcomingEvents > 0)
-                            const Icon(
-                              Icons.circle,
-                              color: Colors.green,
-                              size: 16,
-                            ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward),
+                    ],
+                  ),
+                )
+                    : ListView.builder(
+                  itemCount: _filteredFriends.length,
+                  itemBuilder: (context, index) {
+                    final friend = _filteredFriends[index];
+                    final upcomingEvents =
+                        _upcomingEventsCount[friend.friendId] ?? 0;
+                    final profileImage =
+                        _profileImages[friend.friendId] ?? '';
+
+                    return Container(
+                      margin:
+                      const EdgeInsets.symmetric(vertical: 8.0),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.white, accentColor.withOpacity(0.2)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.2),
+                            spreadRadius: 2,
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
                         ],
                       ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EventListPage(
-                              friendName: friend.friendName,
-                              friendId: friend.friendId,
+                      child: ListTile(
+                        key: Key('friend_$index'),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        leading: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: goldAccent,
+                              width: 2,
                             ),
                           ),
-                        );
+                          child: CircleAvatar(
+                            radius: 25,
+                            backgroundImage: profileImage.isNotEmpty
+                                ? NetworkImage(profileImage)
+                                : const NetworkImage(
+                                'https://i.ibb.co/GFK3bM1/istockphoto-1332100919-612x612.jpg'),
+                          ),
+                        ),
+                        title: Text(
+                          friend.friendName,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Row(
+                          children: [
+                            Icon(Icons.card_giftcard,
+                                size: 16, color: secondaryColor),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Upcoming Events: $upcomingEvents',
+                              style: TextStyle(
+                                color: Colors.green[400],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (upcomingEvents > 0)
+                              Container(
+                                margin: const EdgeInsets.only(right: 8),
+                                child: Icon(
+                                  Icons.circle,
+                                  color: Colors.green,
+                                  size: 12,
+                                ),
+                              ),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: primaryColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(
+                                Icons.arrow_forward,
+                                color: primaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EventListPage(
+                                friendName: friend.friendName,
+                                friendId: friend.friendId,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // Bottom Action Buttons with festive design
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildActionButton(
+                      icon: Icons.person_add,
+                      color: primaryColor,
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/addFriend');
                       },
+                      key: 'add_friend_button',
                     ),
-                  );
-                },
-              ),
-            ),
-            // Add Friend and Create Event Buttons
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  FloatingActionButton(
-                    key: const Key('add_friend_button'),
-                    backgroundColor: Colors.yellow[800],
-                    heroTag: 'addFriend',
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/addFriend');
-                    },
-                    child: const Icon(Icons.person_add),
-                  ),
-                  const SizedBox(height: 16),
-                  FloatingActionButton(
-                    key: const Key('create_event_button'),
-                    backgroundColor: Colors.green,
-                    heroTag: 'createEvent',
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/createEvent');
-                    },
-                    child: const Icon(
-                      Icons.add_card_sharp,
-                      color: Colors.white,
+                    _buildActionButton(
+                      icon: Icons.add_card_sharp,
+                      color: secondaryColor,
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/createEvent');
+                      },
+                      key: 'create_event_button',
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+    required String key,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: FloatingActionButton(
+        key: Key(key),
+        backgroundColor: color,
+        heroTag: key,
+        onPressed: onPressed,
+        child: Icon(icon, color: Colors.white, size: 28),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
         ),
       ),
     );

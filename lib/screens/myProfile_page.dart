@@ -32,6 +32,11 @@ class _ProfilePageState extends State<ProfilePage> {
   int _privateEventsCount = 0;
   int _pledgedGiftsCount = 0;
   bool _isLoading = true;
+  final Color primaryColor = const Color(0xFFFF7B7B); // Soft coral
+  final Color secondaryColor = const Color(0xFF98D7C2); // Mint green
+  final Color accentColor = const Color(0xFFE2D1F9); // Light purple
+  final Color goldAccent = const Color(0xFFFFD700); // Gold
+  final Color backgroundColor = const Color(0xFFFFFAF0); // Cream
 
   @override
   void initState() {
@@ -175,9 +180,14 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.yellow[800],
-        title: const Text('Profile'),
+        backgroundColor:primaryColor,
+        title: const Text('Profile',style: TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -259,12 +269,12 @@ class _ProfilePageState extends State<ProfilePage> {
             Center(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.yellow[800],
+                  backgroundColor: primaryColor,
                 ),
                 onPressed: () {
                   // Save profile changes
                 },
-                child: const Text('Save Changes'),
+                child: const Text('Save Changes',style: TextStyle(color: Colors.white),),
               ),
             ),
           ],

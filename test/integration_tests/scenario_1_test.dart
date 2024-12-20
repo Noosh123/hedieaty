@@ -104,7 +104,14 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
 
+    final logoutButton = find.byKey(const Key('logout_button'));
+    expect(logoutButton, findsOneWidget);
+
+    // Step 13: User clicks on the pledge button
+    await tester.tap(logoutButton);
+    await tester.pumpAndSettle();
+
     // Verify user is back in the homepage
-    expect(searchField, findsOneWidget);
+    expect(emailField, findsOneWidget);
   });
 }

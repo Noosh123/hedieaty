@@ -2,7 +2,7 @@
 
 DRIVER_PATH="test_driver/integration_test_driver.dart"
 OUTPUT_VIDEO=test_videos/recording.mp4
-RECORD_TIMEOUT=179
+RECORD_TIMEOUT=120
 START_RECORD_AFTER=0
 export MSYS_NO_PATHCONV=1 #disable path conversion
 

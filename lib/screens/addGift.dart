@@ -44,7 +44,10 @@ class _CreateGiftState extends State<CreateGift> {
   ];
 
   bool _isLoading = false;
-
+  final Color primaryColor = const Color(0xFFFF7B7B); // Soft coral
+  final Color secondaryColor = const Color(0xFF98D7C2); // Mint green
+  final Color accentColor = const Color(0xFFE2D1F9); // Light purple
+  final Color backgroundColor = const Color(0xFFFFFAF0); // Cream
   @override
   void initState() {
     super.initState();
@@ -157,9 +160,14 @@ class _CreateGiftState extends State<CreateGift> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.yellow[800],
-        title: Text(widget.isEdit ? 'Edit Gift' : 'Add Gift'),
+        backgroundColor: primaryColor,
+        title: Text(widget.isEdit ? 'Edit Gift' : 'Add Gift',style: TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        )),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -264,12 +272,12 @@ class _CreateGiftState extends State<CreateGift> {
               // Save Button
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.yellow[800],
+                  backgroundColor: primaryColor,
                 ),
                 onPressed: _saveGift,
                 child: Text(
                   widget.isEdit ? 'Update Gift' : 'Add Gift',
-                  style: TextStyle(color: Colors.green[800]),
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
             ],
