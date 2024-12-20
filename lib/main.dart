@@ -14,7 +14,7 @@ import 'package:hedieaty/screens/myPledgedGifts_page.dart';
 import 'package:hedieaty/screens/myProfile_page.dart';
 import 'package:hedieaty/services/authWrapper.dart';
 
-void main() async{
+Future<void> main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(const MyApp());

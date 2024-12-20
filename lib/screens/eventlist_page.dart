@@ -68,9 +68,11 @@ class _EventListPageState extends State<EventListPage> {
           itemBuilder: (context, index) {
             final event = _upcomingEvents[index];
             return Card(
+              key: Key('event_${event.id}'), // Unique key for each event
               elevation: 2,
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: ListTile(
+                key: Key('event_$index'),
                 leading: const Icon(
                   Icons.event,
                   color: Colors.green, // Status indicator for upcoming events

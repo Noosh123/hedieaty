@@ -61,6 +61,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   children: [
                     // Email Input
                     TextFormField(
+                      key: const Key('email_field'),
                       controller: _emailController,
                       decoration: InputDecoration(
                         filled: true,
@@ -85,6 +86,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     const SizedBox(height: 16),
                     // Password Input
                     TextFormField(
+                      key: const Key('password_field'),
                       controller: _passwordController,
                       decoration: InputDecoration(
                         filled: true,
@@ -111,6 +113,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     _isLoading
                         ? CircularProgressIndicator()
                         : ElevatedButton(
+                      key: const Key('login_button'),
                       style: ElevatedButton.styleFrom(
                         shape: const StadiumBorder(),
                         padding: const EdgeInsets.symmetric(vertical: 16),

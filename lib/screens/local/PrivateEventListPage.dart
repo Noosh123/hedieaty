@@ -92,7 +92,7 @@ class _PrivateEventListPageState extends State<PrivateEventListPage> {
 
           for (var gift in gifts) {
             // Update the eventId in the gift to the new Firestore event ID
-            final updatedGift = gift.copyWith(eventId: newEventId);
+            final updatedGift = gift.copyWith(eventId: newEventId, userId: userId);
 
             // Publish the gift to Firestore
             await _giftService.addGift(updatedGift);

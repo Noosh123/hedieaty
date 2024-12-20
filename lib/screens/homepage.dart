@@ -211,6 +211,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
+          key: const Key('logout_button'),
           onPressed: () async {
             await _authService.signOut();
             Navigator.pushAndRemoveUntil(
@@ -229,6 +230,7 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Hedieaty'),
         actions: [
           IconButton(
+            key: const Key('profile_button'),
             icon: const Icon(Icons.person_pin, size: 40),
             onPressed: () {
               Navigator.pushNamed(context, '/myprofile');
@@ -244,6 +246,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             // Search Field
             TextField(
+              key: const Key('search_bar'),
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.purple.withOpacity(0.1),
@@ -269,6 +272,7 @@ class _HomePageState extends State<HomePage> {
 
                   return Card(
                     child: ListTile(
+                      key: Key('friend_$index'),
                       leading: CircleAvatar(
                         backgroundImage: profileImage.isNotEmpty
                             ? NetworkImage(profileImage)
@@ -314,6 +318,7 @@ class _HomePageState extends State<HomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   FloatingActionButton(
+                    key: const Key('add_friend_button'),
                     backgroundColor: Colors.yellow[800],
                     heroTag: 'addFriend',
                     onPressed: () {
@@ -323,6 +328,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 16),
                   FloatingActionButton(
+                    key: const Key('create_event_button'),
                     backgroundColor: Colors.green,
                     heroTag: 'createEvent',
                     onPressed: () {

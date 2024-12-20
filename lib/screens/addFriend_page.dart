@@ -76,6 +76,7 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
               ),
               const SizedBox(height: 8),
               TextFormField(
+                key: const Key('phone_field'), // Added key
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
@@ -100,6 +101,7 @@ class _AddFriendScreenState extends State<AddFriendScreen> {
                 child: _isLoading
                     ? const CircularProgressIndicator()
                     : ElevatedButton(
+                  key: const Key('add_friend_button2'), // Added key
                   onPressed: _addFriend,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,

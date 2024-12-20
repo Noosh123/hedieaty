@@ -71,10 +71,13 @@ class _GiftListPageState extends State<GiftListPage> {
                 final isAvailable = gift.status == 'available';
 
                 return Card(
+                   // Unique key for each gift
                   elevation: 2,
                   margin: const EdgeInsets.symmetric(vertical: 8),
                   child: ListTile(
+                    key: Key('gift_$index'),
                     leading: CircleAvatar(
+                      key: Key('gift_avatar_${gift.id}'), // Key for Avatar
                       backgroundImage: gift.image.isNotEmpty
                           ? NetworkImage(gift.image)
                           : null, // No background image if gift image is empty
@@ -138,6 +141,7 @@ class _GiftListPageState extends State<GiftListPage> {
 
   Widget _buildEventDetails() {
     return Container(
+      key: const Key('event_details_container'),
       padding: const EdgeInsets.all(16.0),
       margin: const EdgeInsets.only(bottom: 16.0),
       decoration: BoxDecoration(

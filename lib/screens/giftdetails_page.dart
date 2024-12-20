@@ -180,6 +180,7 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
                 // Pledge/Unpledge Button
                 Center(
                   child: ElevatedButton.icon(
+                    key: const Key('gift_pledge_button'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _isPledged ? Colors.red : Colors.green,
                       padding: const EdgeInsets.symmetric(
