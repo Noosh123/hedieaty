@@ -111,7 +111,7 @@ class _EventListPageState extends State<EventListPage> {
                     backgroundColor: primaryColor.withOpacity(0.1),
                     child: Icon(
                       Icons.event,
-                      color: primaryColor,
+                      color: Colors.green,
                       size: 28,
                     ),
                   ),
