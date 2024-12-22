@@ -23,7 +23,7 @@ class _HomePageState extends State<HomePage> {
   final EventService _eventService = EventService();
   final NotificationService _notificationService = NotificationService();
   final UserService _userService = UserService();
-  final GiftService _giftService = GiftService();
+  //final GiftService _giftService = GiftService();
 
   List<FriendModel> _friends = [];
   Map<String, int> _upcomingEventsCount = {};
@@ -45,7 +45,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadFriendsAndEvents();
-    _checkNotifications();
+    _checkNotificationsStream();
   }
 
   void _loadFriendsAndEvents() async {
@@ -105,31 +105,28 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-
-  Future<void> _checkNotifications() async {
+  void _checkNotificationsStream()async {
     final currentUserId = _authService.currentUser!.uid;
 
-    try {
-      final notifications =
-      await _notificationService.getNotifications(currentUserId);
-
+    final notificationSubscription = _notificationService
+        .getNotificationsStream(currentUserId)
+        .listen((notifications) {
       if (notifications.isNotEmpty) {
         setState(() {
-          _notifications = notifications.reversed.toList();
+          _notifications = notifications.reversed.toList(); // Reverse to show latest notifications first
         });
-
-        // Show notifications in a modal pop-up
-        _showNotificationPopup();
-
-        // Clear notifications from Firestore after showing them
-        await _notificationService.clearNotifications(currentUserId);
+        _showNotificationPopup(); // Show notifications in a popup
       }
-    } catch (e) {
-      print('Error fetching notifications: $e');
-    }
+    });
+
+    //await _notificationService.clearNotifications(currentUserId);
+
+    _subscriptions.add(notificationSubscription); // Add to subscriptions for cleanup
   }
 
+
   Future<void> _showNotificationPopup() async {
+    if (_notifications.isEmpty) return;
     showDialog(
       context: context,
       builder: (context) {
@@ -188,7 +185,12 @@ class _HomePageState extends State<HomePage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () async {
+                Navigator.pop(context);
+                String currentUserId = _authService.currentUser!.uid;
+                //Navigator.pop(context);
+                await _notificationService.clearNotifications(currentUserId);
+              },
               child: const Text("Close"),
             ),
           ],

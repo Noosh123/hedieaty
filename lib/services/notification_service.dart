@@ -47,4 +47,22 @@ class NotificationService {
       rethrow;
     }
   }
+  Stream<List<NotificationModel>> getNotificationsStream(String userId) {
+    try {
+      return _notificationsCollection.doc(userId).snapshots().map((snapshot) {
+        if (snapshot.exists && snapshot.data() != null) {
+          final notifications = snapshot['notifications'] as List<dynamic>;
+          return notifications
+              .map((data) => NotificationModel.fromFirestore(data as Map<String, dynamic>))
+              .toList();
+        }
+        return [];
+      });
+    } catch (e) {
+      print("Error fetching notifications stream: $e");
+      rethrow;
+    }
+  }
+
+
 }
